@@ -107,4 +107,6 @@ venv.bak/
 
 \#*#
 
-directory_structure.jpg
+*.jpg
+test/
+test/**
