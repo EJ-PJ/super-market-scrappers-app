@@ -1,5 +1,7 @@
 import requests
 
+# HTTP handler whit GET and POST methods
+
 
 class BaseClient:
 

@@ -1,0 +1,1 @@
+from .super_fresh_scrapper import SuperFreshScrapper
