@@ -26,6 +26,6 @@ def search_products():
 
     result = products.product_superfresh["products"]
 
-    print(result)
+    # print(result)
 
     return {"products": result}, 200
