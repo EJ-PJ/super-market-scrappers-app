@@ -12,4 +12,15 @@ def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = flask_key
 
+    # Error handler
+    @app.errorhandler(404)
+    def not_found(error):
+        return {"error": "Endpoint not found"}, 404
+
+    from .routes import products_bp
+
+    app.register_blueprint(products_bp, url_prefix='/')
+
+
+
     return app

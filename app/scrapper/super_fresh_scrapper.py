@@ -1,12 +1,13 @@
-from clients import SuperFreshClient
+from app.clients import SuperFreshClient
 
 
 class SuperFreshScrapper(SuperFreshClient):
 
     # Constructor
     def __init__(self):
-        self.product_superfresh
+        super().__init__()
+        self.product_superfresh = None
 
     def search_products(self, product):
-        self.product_superfresh = self.search_products()
+        self.product_superfresh = super().search_products(product)
         return self.product_superfresh
