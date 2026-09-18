@@ -21,6 +21,4 @@ def create_app():
 
     app.register_blueprint(products_bp, url_prefix='/')
 
-
-
     return app

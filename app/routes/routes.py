@@ -8,11 +8,13 @@ products_bp = Blueprint('routes', __name__)
 def search_products():
     data = request.get_json()
 
+    # Test if Json data sent
     if not data:
         return {"error": "JSON body is required"}, 400
 
     query = data.get("query")
 
+    # Test if json has attribute query
     if not query:
         return {"error": "query is required"}, 400
 
