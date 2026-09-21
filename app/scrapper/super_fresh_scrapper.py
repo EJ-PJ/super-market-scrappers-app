@@ -1,4 +1,4 @@
-from app.clients import SuperFreshClient
+from app.clients.super_fresh_client import SuperFreshClient
 
 
 class SuperFreshScrapper(SuperFreshClient):
