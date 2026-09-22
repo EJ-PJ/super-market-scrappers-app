@@ -6,13 +6,13 @@ products_bp = Blueprint('routes', __name__)
 
 @products_bp.route('/search', methods=['GET'])
 def search_products():
-    data = request.get_json()
+    body = request.get_json() # Json Body
 
-    # Test if Json data sent
-    if not data:
-        return {"error": "JSON body is required"}, 400
+    # Test if Json body was sent
+    if not body:
+        return {"error": "JSON data is required"}, 400
 
-    query = data.get("query")
+    query = body.get("query")
 
     # Test if json has attribute query
     if not query:
@@ -22,7 +22,7 @@ def search_products():
 
     products = Products()
 
-    products.search_products(data["query"])
+    products.search_products(body["query"])
 
     # print("products:", products.product_superfresh)
 
