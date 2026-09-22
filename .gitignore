@@ -110,3 +110,4 @@ venv.bak/
 *.jpg
 test/
 test/**
+notes.txt
