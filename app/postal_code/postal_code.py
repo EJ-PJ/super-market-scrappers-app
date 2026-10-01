@@ -56,12 +56,21 @@ class PostalCode():
 
         return result
 
-
+""" 
 def main():
     postal_code = PostalCode()
-    print("postal_code: ", postal_code.find_postal_code("Guatemala", "Test"))
-    print("Department: ", postal_code.deparment)
-    print("Municipality: ", postal_code.municipality)
-    print("Postal Code: ", postal_code.postal_code)
+    exit = True
+
+    while exit:
+        deparment = input("Ingresa Departamento: ")
+        municipio = input("Ingresa Municipio: ")
+        area = input("Ingresa Area (Zona 1, o Zona 2, Zona 15, etc) (Opcional): ")
+
+        print("postal_code: ", postal_code.find_postal_code(deparment, municipio, area))
+
+        print("Department: ", postal_code.deparment)
+        print("Municipality: ", postal_code.municipality)
+        print("Postal Code: ", postal_code.postal_code)
 
 main()
+"""
