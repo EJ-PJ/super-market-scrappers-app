@@ -15,21 +15,40 @@ def search_products():
 
     query = body.get("query")
 
+    super_market = body.get("super_market")
+
     # Test if json has attribute query
     if not query:
         return {"error": "query is required"}, 400
 
-    # print("query:", query)
+    if not super_market:
+        return {"error": "super_market is required"}, 400
 
     products = Products()
 
-    products.search_products(body["query"])
+    if super_market == 'maxi_despensa':
+        print(body)
+        from_quantity = body.get("from")
+        print("from_quantity", from_quantity)
 
-    # print("products:", products.product_superfresh)
 
-    result = products.product_super_fresh["products"]
+        to_quantity = body.get("to")
+        print("to_quantity", to_quantity)
 
-    # print(result)
+        if from_quantity == None:
+            return {"error": "from is required"}, 400
+        elif to_quantity == None:
+            return {"error": "to is required"}, 400
+        else:
+            # maxi_despensa products
+            products.search_products_maxi_despensa(body["query"], int(from_quantity), int(to_quantity))
+
+    if super_market == 'super_fresh':
+        # super_fresh products
+        products.search_products_super_fresh(body["query"])
+
+    result = products.products_
+
 
     return {"products": result}, 200
 
