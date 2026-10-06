@@ -1,11 +1,13 @@
 from .base_client import BaseClient
 
 
-class SuperFreshClient(BaseClient):
+class SuperFreshClient:
 
     # https://msf-api.gta.com.gt/api/products/search
     base_url = "https://msf-api.gta.com.gt/api/products/search"
-    query = {"version": "5.1.6",
+
+    body =  {
+             "version": "5.1.6",
              "channel": "web",
              "search_term": "Monster",
              "qty": 0,
@@ -13,10 +15,13 @@ class SuperFreshClient(BaseClient):
              }
 
     def search_products(self, product):
-        self.query["search_term"] = product
-        response = self.post(
+        self.body["search_term"] = product
+
+        base_client = BaseClient()
+
+        response = base_client.post(
             self.base_url,
-            json=self.query,
+            json=self.body,
             headers={
                 'Accept': "*/*",
                 'Accept-Encoding': "gzip, deflate, br, zstd",
