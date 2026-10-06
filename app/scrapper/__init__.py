@@ -1,1 +1,2 @@
 from .super_fresh_scrapper import SuperFreshScrapper
+from .maxi_despensa_scrapper import MaxiDespensaScrapper
