@@ -50,6 +50,21 @@ def search_products():
     result = products.products_
 
 
+    
+    # search_promos test
+    """
+    from app.parser.promo_parser_maxi_despensa import ParserPromo
+    parser_promo = ParserPromo()
+
+    print()
+    for product in result["data"]["productSearch"]["products"]:
+        promos = parser_promo.extract_promos(product)
+        if promos:
+            print(product["productName"], [p["label"] for p in promos])
+        #promo_result = parser_promo.extract_promos(result)
+    print()
+    """
+
     return {"products": result}, 200
 
 

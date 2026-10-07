@@ -21,17 +21,9 @@ class MaxiDespensaClient:
 
     def search_products(self, product, from_page, to_page):
 
-        #print("querystring: ", self.querystring)
-        #print("maxi_despensa product: ", product)
-        #print("maxi_despensa from_page: ", from_page)
-        #print("maxi_despensa to_page: ", to_page)
-
         maxi_parser = ParserMaxiDespensa()
 
         encode_base64_json = maxi_parser.parser(self.search_variables, product, from_page, to_page)
-
-        print("maxi_despensa encode_base64_json: ", encode_base64_json)
-
 
         # copy so the class-level querystring is never mutated between requests
         querystring = dict(self.querystring)
@@ -39,8 +31,6 @@ class MaxiDespensaClient:
             "persistedQuery": self.persisted_query,
             "variables": encode_base64_json
         })
-
-        print("querystring (new): ", querystring)
 
         base_client = BaseClient()
 
