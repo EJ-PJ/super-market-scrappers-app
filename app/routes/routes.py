@@ -49,7 +49,6 @@ def search_products():
 
     result = products.products_
 
-
     
     # search_promos test
     """
@@ -65,7 +64,7 @@ def search_products():
     print()
     """
 
-    return {"products": result}, 200
+    return {"data": result}, 200
 
 
 @products_bp.route('/api/v1/search-postal-code', methods=['GET'])
