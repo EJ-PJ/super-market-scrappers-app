@@ -5,14 +5,14 @@ class SuperFreshScrapperProduct:
                     "products" : []
                     }
                 }
-        i = 0
+
         for product in products['products']:
             product_desp = {
                     "description" : "",
                     "price" : "",
                     "price_offer": "",
                     "img" : "",
-                    "offeHighlight": [],
+                    "offerHighlight": [],
                     "url" : ""
 			} 
             # adding description
