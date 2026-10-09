@@ -1,6 +1,6 @@
 import json
 from .base_client import BaseClient
-from app.parser.maxi_despensa_parser import ParserMaxiDespensa
+from app.parser.maxi_despensa_search_product_parser import ParserMaxiDespensa
 
 
 class MaxiDespensaClient:
