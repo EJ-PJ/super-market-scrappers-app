@@ -47,6 +47,23 @@ def search_products():
         # super_fresh products
         products.search_products_super_fresh(body["query"])
 
+    if super_market == 'all':
+        print(body)
+        from_quantity = body.get("from")
+        print("from_quantity", from_quantity)
+
+
+        to_quantity = body.get("to")
+        print("to_quantity", to_quantity)
+
+        if from_quantity == None:
+            return {"error": "from is required"}, 400
+        elif to_quantity == None:
+            return {"error": "to is required"}, 400
+        else:
+            # maxi_despensa products
+            products.search_products(body["query"], int(from_quantity), int(to_quantity))
+
     result = products.products_
 
     
