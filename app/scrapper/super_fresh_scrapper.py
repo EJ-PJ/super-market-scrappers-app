@@ -16,14 +16,10 @@ class SuperFreshScrapper:
         # Search for products
         self.product_super_fresh = super_fresh_client.search_products(product)
 
-        print("type super_fresh_: ", type(self.product_super_fresh).__name__)
-
         # Parse praducts for show in new json
         super_fresh_p_p = SuperFreshScrapperProduct()
         parse_products = super_fresh_p_p.product_parser(products=self.product_super_fresh)
 
-        print("sp_products: ", parse_products)
-        
         self.parse_super_fresh_produtcs = parse_products
 
         return self.parse_super_fresh_produtcs

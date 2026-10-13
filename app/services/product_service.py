@@ -9,19 +9,28 @@ class Products:
 
     def search_products(self, product, from_, to_):
 
+        print("loading Maxi Despensa products...")
         super_fresh_scrapper = SuperFreshScrapper()
+        print("Maxi Despensa products complete!")
 
         maxi_despensa_scrapper = MaxiDespensaScrapper()
 
+        print("loading Super Fresh products...")
         super_fresh_products = super_fresh_scrapper.search_products(product)
+        print("Super Fresh products complete!")
 
         maxi_despensa_products = maxi_despensa_scrapper.search_products(product, from_, to_)
+
+        names = ['super_fresh', 'maxi_despensa']
 
         # merge products
         merge_products = MergeProducts()
 
-        self.products_ = merge_products.merge_products(super_fresh_products, maxi_despensa_products)
-
+        self.products_ = merge_products.merge_products(super_fresh_products, 
+                                                       maxi_despensa_products, 
+                                                       super_market_names=names
+                                                      )
+        
         return self.products_
 
 

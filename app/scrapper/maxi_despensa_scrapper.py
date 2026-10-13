@@ -15,12 +15,12 @@ class MaxiDespensaScrapper:
         # Search products
         self.product_maxi_despensa = maxi_despensa_client.search_products(product, from_page, to_page)
 
-        print("type maxi_despensa ", type(self.product_maxi_despensa).__name__)        
+        # print("type maxi_despensa ", type(self.product_maxi_despensa).__name__)        
 
         # Parser products
         maxi_despensa_p_p = MaxiDespensaScrapperProduct()
         self.parse_products_maxi_despensa = maxi_despensa_p_p.product_parser(self.product_maxi_despensa)
 
-        print("parse products: ", self.parse_products_maxi_despensa)
+        # print("parse products: ", self.parse_products_maxi_despensa)
 
         return self.parse_products_maxi_despensa
