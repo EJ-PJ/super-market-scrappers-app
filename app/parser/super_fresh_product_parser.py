@@ -13,7 +13,13 @@ class SuperFreshScrapperProduct:
                     "price_offer": "",
                     "img" : "",
                     "offerHighlight": [],
-                    "url" : ""
+                    "url" : "",
+                    "category" : {
+                        "name" : "",
+                        "subcategory" : {
+                            "name" : ""
+                        }
+                    }
 			} 
             # adding description
             product_desp["description"] = product.get("description")
@@ -23,7 +29,11 @@ class SuperFreshScrapperProduct:
             product_desp['price_offer'] = product.get("offer", {}).get("price")
             # adding img
             product_desp['img'] = product.get("images", [{}])[0].get("url")
-            # adding bar code
+            # adding category name
+            product_desp['category']['name'] = self.safe_get(product, "subcategory", "name") 
+            # adding subcategory name
+            product_desp['category']['subcategory']['name'] = self.safe_get(product, "subcategory", "category", "name") 
+            # adding bar code0
             bar_code = product.get('barcode')
             url_p = f"https://www.misuperfresh.com.gt/product/{bar_code}"
             product_desp['url'] = url_p
@@ -32,3 +42,12 @@ class SuperFreshScrapperProduct:
             sp_products['super_fresh']['products'].append(product_desp)
 
         return sp_products
+
+
+    def safe_get(self, data, *keys, default=None):
+        for key in keys:
+            try:
+                data = data[key]
+            except (KeyError, IndexError, TypeError):
+                return default
+        return data
