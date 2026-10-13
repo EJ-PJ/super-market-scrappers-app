@@ -42,6 +42,9 @@ def search_products():
         else:
             # maxi_despensa products
             products.search_products_maxi_despensa(body["query"], int(from_quantity), int(to_quantity))
+    else:
+        return {"data": "super_market not found"}, 400
+
 
     if super_market == 'super_fresh':
         # super_fresh products
