@@ -1,10 +1,10 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { Search } from './components/search/search';
 
 @Component({
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, Search],
   selector: 'app-root',
-  styleUrl: './app.css',
   templateUrl: './app.html',
 })
 export class App {
