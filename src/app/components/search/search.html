@@ -2,6 +2,7 @@
   <h1>Buscar Productos</h1>
   <div class="relative w-full max-w-xl mx-auto bg-white rounded-full">
     <input
+       [(ngModel)]="product"
        placeholder="e.g. Blog"
        class="rounded-full w-full h-16
        bg-transparent py-2 pl-8 pr-32 outline-none
@@ -11,6 +12,7 @@
        name="query"
        id="query">
     <button
+      (click)="searchProduct()"
       type="submit"
       class="absolute inline-flex items-center h-10 px-4
       py-2 text-sm text-white transition duration-150
