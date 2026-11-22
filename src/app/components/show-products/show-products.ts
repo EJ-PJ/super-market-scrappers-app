@@ -1,10 +1,12 @@
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
+import { combineLatest, Subscription } from 'rxjs';
 import { Products } from '../../services/products';
+import { Location } from '../../services/location';
+import { LocationPicker } from '../location-picker/location-picker';
 import { Product, StoreStatus } from '../../../models/products';
 
 type SortOption = 'relevance' | 'price-asc' | 'price-desc' | 'discount';
@@ -12,12 +14,13 @@ type SortOption = 'relevance' | 'price-asc' | 'price-desc' | 'discount';
 const PAGE_SIZE = 20;
 
 @Component({
-  imports: [CurrencyPipe, FormsModule, RouterLink],
+  imports: [CurrencyPipe, FormsModule, LocationPicker],
   selector: 'app-show-products',
   templateUrl: './show-products.html',
 })
 export class ShowProducts {
   private productsService = inject(Products);
+  location = inject(Location);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
@@ -25,6 +28,10 @@ export class ShowProducts {
 
   // search bar on top of the grid
   searchText = '';
+  // location panel open / closed
+  showLocation = signal(false);
+  // product whose "Ver en tienda" was pressed, shows the location warning
+  storeWarning = signal<Product | null>(null);
 
   query = signal('');
   page = signal(1);
@@ -40,7 +47,12 @@ export class ShowProducts {
   selectedStore = signal('');
   sort = signal<SortOption>('relevance');
 
-  failedStores = computed(() => this.stores().filter((store) => !store.ok));
+  // store warnings closed with the X (they come back on a new search)
+  dismissedWarnings = signal<string[]>([]);
+
+  failedStores = computed(() =>
+    this.stores().filter((store) => !store.ok && !this.dismissedWarnings().includes(store.id)),
+  );
 
   storeNames = computed(() => {
     const names: Record<string, string> = {};
@@ -78,14 +90,16 @@ export class ShowProducts {
   });
 
   constructor() {
-    // a new ?q= in the url = a new search
-    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
-      const query = (params.get('q') ?? '').trim();
-      this.searchText = query;
-      this.query.set(query);
-      this.selectedStore.set('');
-      this.load(1);
-    });
+    // a new ?q= in the url or a new location = a new search
+    combineLatest([this.route.queryParamMap, toObservable(this.location.postalCode)])
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(([params]) => {
+        const query = (params.get('q') ?? '').trim();
+        this.searchText = query;
+        this.query.set(query);
+        this.selectedStore.set('');
+        this.load(1);
+      });
   }
 
   search() {
@@ -93,6 +107,17 @@ export class ShowProducts {
     if (query) {
       this.router.navigate(['products'], { queryParams: { q: query } });
     }
+  }
+
+  openStore(product: Product) {
+    this.storeWarning.set(null);
+    if (product.url) {
+      window.open(product.url, '_blank', 'noopener');
+    }
+  }
+
+  dismissWarning(storeId: string) {
+    this.dismissedWarnings.update((ids) => [...ids, storeId]);
   }
 
   loadMore() {
@@ -118,31 +143,34 @@ export class ShowProducts {
     if (firstPage) {
       this.products.set([]);
       this.stores.set([]);
+      this.dismissedWarnings.set([]);
     }
 
-    this.request = this.productsService.searchProducts(query, [], page, PAGE_SIZE).subscribe({
-      next: (response) => {
-        this.page.set(page);
-        this.products.update((current) =>
-          firstPage ? response.products : [...current, ...response.products],
-        );
-        // keep the store status of the first page if the next ones fail differently
-        if (firstPage) {
-          this.stores.set(response.stores);
-        }
-        this.hasMore.set(response.stores.some((store) => store.ok && store.count === PAGE_SIZE));
-        this.loading.set(false);
-        this.loadingMore.set(false);
-      },
-      error: (err) => {
-        this.error.set(
-          err.status === 0
-            ? 'No se pudo conectar con el servidor. ¿Está corriendo el backend?'
-            : err.error?.error || 'Ocurrió un error al buscar los productos',
-        );
-        this.loading.set(false);
-        this.loadingMore.set(false);
-      },
-    });
+    this.request = this.productsService
+      .searchProducts(query, [], page, PAGE_SIZE, this.location.postalCode())
+      .subscribe({
+        next: (response) => {
+          this.page.set(page);
+          this.products.update((current) =>
+            firstPage ? response.products : [...current, ...response.products],
+          );
+          // keep the store status of the first page if the next ones fail differently
+          if (firstPage) {
+            this.stores.set(response.stores);
+          }
+          this.hasMore.set(response.stores.some((store) => store.ok && store.count === PAGE_SIZE));
+          this.loading.set(false);
+          this.loadingMore.set(false);
+        },
+        error: (err) => {
+          this.error.set(
+            err.status === 0
+              ? 'No se pudo conectar con el servidor. ¿Está corriendo el backend?'
+              : err.error?.error || 'Ocurrió un error al buscar los productos',
+          );
+          this.loading.set(false);
+          this.loadingMore.set(false);
+        },
+      });
   }
 }

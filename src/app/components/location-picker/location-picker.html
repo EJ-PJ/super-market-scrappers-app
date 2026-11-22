@@ -1,0 +1,66 @@
+<div class="flex flex-col gap-2 text-sm">
+  @if (location.error()) {
+    <p class="text-red-600">{{ location.error() }}</p>
+  } @else if (location.loading()) {
+    <p class="text-gray-500">Cargando ubicaciones...</p>
+  } @else {
+    <div class="flex flex-wrap gap-2">
+      <select
+        [value]="departmentKey()"
+        (change)="selectDepartment($any($event.target).value)"
+        aria-label="Departamento"
+        class="flex-1 min-w-36 rounded-lg border border-gray-300 bg-white px-2 py-1.5">
+        <option value="">Departamento</option>
+        @for (department of location.departments(); track department.key) {
+          <option [value]="department.key" [selected]="department.key === departmentKey()">
+            {{ department.name }}
+          </option>
+        }
+      </select>
+
+      <select
+        [value]="municipalityKey()"
+        (change)="selectMunicipality($any($event.target).value)"
+        [disabled]="!department()"
+        aria-label="Municipio"
+        class="flex-1 min-w-36 rounded-lg border border-gray-300 bg-white px-2 py-1.5 disabled:opacity-50">
+        <option value="">Municipio</option>
+        @for (municipality of department()?.municipalities ?? []; track municipality.key) {
+          <option [value]="municipality.key" [selected]="municipality.key === municipalityKey()">
+            {{ municipality.name }}
+          </option>
+        }
+      </select>
+
+      <!-- Only Guatemala, Mixco and Villa Nueva are split by zones -->
+      @if (municipality()?.areas?.length) {
+        <select
+          [value]="areaKey()"
+          (change)="selectArea($any($event.target).value)"
+          aria-label="Zona"
+          class="flex-1 min-w-28 rounded-lg border border-gray-300 bg-white px-2 py-1.5">
+          <option value="">Zona</option>
+          @for (area of municipality()!.areas; track area.key) {
+            <option [value]="area.key" [selected]="area.key === areaKey()">{{ area.name }}</option>
+          }
+        </select>
+      }
+    </div>
+
+    <div class="flex items-center justify-between gap-2 text-gray-600">
+      @if (location.selected(); as selected) {
+        <span>
+
+        <i class="fa-solid fa-location-dot text-teal-600 mr-1" aria-hidden="true"></i>
+         Precios para <strong>{{ selected.label }}</strong>
+          <span class="text-gray-400">(CP {{ selected.postalCode }})</span>
+        </span>
+        <button type="button" (click)="clear()" class="text-teal-700 hover:underline">
+          Quitar ubicación
+        </button>
+      } @else {
+        <span class="text-gray-500">Sin ubicación: se muestran los precios generales de cada tienda.</span>
+      }
+    </div>
+  }
+</div>

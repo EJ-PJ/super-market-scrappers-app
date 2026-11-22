@@ -16,7 +16,20 @@
           Buscar
         </button>
       </form>
+      <button
+        type="button"
+        (click)="showLocation.set(!showLocation())"
+        [attr.aria-expanded]="showLocation()"
+        class="max-w-56 truncate rounded-full h-10 px-4 text-sm border border-gray-300 hover:bg-gray-50">
+        <i class="fa-solid fa-location-dot text-teal-600 mr-1" aria-hidden="true"></i>
+        {{ location.selected()?.label ?? 'Elegir zona' }}
+      </button>
     </div>
+    @if (showLocation()) {
+      <div class="max-w-7xl mx-auto px-4 pb-3">
+        <app-location-picker (changed)="showLocation.set(false)" />
+      </div>
+    }
   </header>
 
   <main class="max-w-7xl mx-auto px-4 py-6">
@@ -28,7 +41,10 @@
         <div>
           <h1 class="text-2xl font-semibold text-gray-800">Resultados para "{{ query() }}"</h1>
           @if (!loading()) {
-            <p class="text-sm text-gray-500">{{ visibleProducts().length }} productos</p>
+            <p class="text-sm text-gray-500">
+              {{ visibleProducts().length }} productos
+              · {{ location.selected() ? 'precios para ' + location.selected()!.label : 'precios generales (sin ubicación)' }}
+            </p>
           }
         </div>
 
@@ -64,8 +80,17 @@
 
       <!-- Stores that failed: the others still show their products -->
       @for (store of failedStores(); track store.id) {
-        <div class="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-800">
-          <strong>{{ store.name }}:</strong> {{ store.error }}. Se muestran los resultados de las demás tiendas.
+        <div class="mb-3 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-800">
+          <p class="flex-1">
+            <strong>{{ store.name }}:</strong> {{ store.error }}. Se muestran los resultados de las demás tiendas.
+          </p>
+          <button
+            type="button"
+            (click)="dismissWarning(store.id)"
+            [attr.aria-label]="'Cerrar aviso de ' + store.name"
+            class="-mr-1 rounded px-1.5 leading-none text-lg text-amber-700 hover:bg-amber-100">
+            ×
+          </button>
         </div>
       }
 
@@ -149,10 +174,10 @@
                 }
 
                 @if (product.url) {
+                  <!-- Opens a warning first: the store site uses its own location -->
                   <a
                     [href]="product.url"
-                    target="_blank"
-                    rel="noopener"
+                    (click)="$event.preventDefault(); storeWarning.set(product)"
                     class="mt-2 block text-center rounded-lg border border-teal-600 py-1 text-sm
                     text-teal-700 hover:bg-teal-50">
                     Ver en tienda
@@ -176,4 +201,51 @@
       }
     }
   </main>
+
+  <!-- Warning before opening the store site -->
+  @if (storeWarning(); as product) {
+    <div
+      class="fixed inset-0 z-20 flex items-center justify-center bg-black/40 px-4"
+      (click)="storeWarning.set(null)">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="store-warning-title"
+        class="w-full max-w-md rounded-xl bg-white p-5 shadow-xl"
+        (click)="$event.stopPropagation()">
+        <h2 id="store-warning-title" class="text-lg font-semibold text-gray-800 mb-2">
+          ⚠️ Cambia la ubicación en la tienda
+        </h2>
+        <p class="text-sm text-gray-600 mb-2">
+          Vas a abrir <strong>{{ storeNames()[product.store] || product.store }}</strong>.
+          La página de la tienda no sabe qué ubicación elegiste aquí.
+        </p>
+        @if (location.selected(); as selected) {
+          <p class="text-sm text-gray-600 mb-4">
+            Para ver este producto con el mismo precio y disponibilidad, cambia manualmente la
+            ubicación en la tienda a <strong>{{ selected.label }}</strong>.
+          </p>
+        } @else {
+          <p class="text-sm text-gray-600 mb-4">
+            Aquí se muestran los precios generales. Si la tienda te pide elegir una ubicación,
+            el precio o la disponibilidad pueden cambiar.
+          </p>
+        }
+        <div class="flex justify-end gap-2">
+          <button
+            type="button"
+            (click)="storeWarning.set(null)"
+            class="rounded-lg px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            Cancelar
+          </button>
+          <button
+            type="button"
+            (click)="openStore(product)"
+            class="rounded-lg px-4 py-2 text-sm text-white bg-teal-600 hover:bg-teal-700">
+            Entendido, ir a la tienda
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 </div>

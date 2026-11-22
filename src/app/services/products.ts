@@ -5,14 +5,21 @@ import { SearchResponse, Store } from '../../models/products';
 
 // Full URL (not '/api/v1' + proxy): the proxy only exists in "ng serve",
 // Electron loads the app from file:// and needs the real backend address
-const API_URL = 'http://127.0.0.1:5000/api/v1';
+export const API_URL = 'http://127.0.0.1:5000/api/v1';
 
 @Service()
 export class Products {
   private http = inject(HttpClient);
 
-  // Without stores the backend searches in every supermarket
-  searchProducts(query: string, stores: string[] = [], page = 1, pageSize = 20) {
+  // Without stores the backend searches in every supermarket.
+  // Without postalCode each store returns its default prices
+  searchProducts(
+    query: string,
+    stores: string[] = [],
+    page = 1,
+    pageSize = 20,
+    postalCode: string | null = null,
+  ) {
     const params: Record<string, string> = {
       q: query,
       page: String(page),
@@ -20,6 +27,9 @@ export class Products {
     };
     if (stores.length) {
       params['stores'] = stores.join(',');
+    }
+    if (postalCode) {
+      params['postal_code'] = postalCode;
     }
     return this.http.get<SearchResponse>(`${API_URL}/products`, { params });
   }
