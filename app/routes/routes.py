@@ -7,7 +7,7 @@ products_bp = Blueprint('routes', __name__)
 MAX_PAGE_SIZE = 50
 
 
-# GET /api/v1/products?q=leche&stores=maxi_despensa,super_fresh&page=1&page_size=20
+# GET /api/v1/products?q=leche&stores=maxi_despensa,super_fresh&page=1&page_size=20&postal_code=1010
 @products_bp.route('/api/v1/products', methods=['GET'])
 def search_products():
     query = (request.args.get("q") or "").strip()
@@ -33,7 +33,12 @@ def search_products():
     if page_size is None or not 1 <= page_size <= MAX_PAGE_SIZE:
         return {"error": f"page_size must be an integer between 1 and {MAX_PAGE_SIZE}"}, 400
 
-    return Products().search_products(query, store_ids, page, page_size), 200
+    # optional, from /api/v1/search-postal-code (e.g. 1010 = Guatemala, Zona 10)
+    postal_code = (request.args.get("postal_code") or "").strip() or None
+    if postal_code and not postal_code.isdigit():
+        return {"error": "postal_code must contain only digits"}, 400
+
+    return Products().search_products(query, store_ids, page, page_size, postal_code), 200
 
 
 def to_int(value):
