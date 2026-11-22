@@ -29,6 +29,7 @@
       "main.js",
       "preload.js",
       "loading.html",
+      "assets/icon.png",
       "renderer/**/*"
     ],
     "extraResources": [
@@ -41,12 +42,14 @@
       "target": [
         "AppImage"
       ],
-      "category": "Utility"
+      "category": "Utility",
+      "icon": "assets/icon.png"
     },
     "win": {
       "target": [
         "nsis"
-      ]
+      ],
+      "icon": "assets/icon.png"
     },
     "nsis": {
       "oneClick": false,

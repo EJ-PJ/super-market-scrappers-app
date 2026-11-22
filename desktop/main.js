@@ -104,6 +104,8 @@ function createWindow(apiUrl) {
     minWidth: 900,
     minHeight: 600,
     title: 'Supermarket Scrapper',
+    // window / taskbar icon (the installers take it from package.json "build")
+    icon: path.join(__dirname, 'assets', 'icon.png'),
     autoHideMenuBar: true,
     show: false,
     webPreferences: {
