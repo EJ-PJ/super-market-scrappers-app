@@ -15,13 +15,14 @@ class SuperFreshClient:
              }
 
     def search_products(self, product):
-        self.body["search_term"] = product
+        # copy so the class-level body is never mutated between requests
+        body = {**self.body, "search_term": product}
 
         base_client = BaseClient()
 
         response = base_client.post(
             self.base_url,
-            json=self.body,
+            json=body,
             headers={
                 'Accept': "*/*",
                 'Accept-Encoding': "gzip, deflate, br, zstd",
