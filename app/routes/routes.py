@@ -76,3 +76,9 @@ def find_postal_code():
         "area": area,
         "postal_code": result
     }, 200
+
+
+# Every department / municipality / zone with its postal code (for the location selects)
+@products_bp.route('/api/v1/locations', methods=['GET'])
+def list_locations():
+    return {"locations": PostalCode().list_locations()}, 200

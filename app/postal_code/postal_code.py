@@ -19,6 +19,10 @@ def _get_key(data: dict, name: str):
     return None
 
 
+def _display_name(key: str) -> str: # "El_Progreso" -> "El Progreso"
+    return key.replace("_", " ")
+
+
 class PostalCode():
 
     # Constructor
@@ -55,6 +59,40 @@ class PostalCode():
         self.postal_code = result
 
         return result
+
+    def list_locations(self) -> list[dict]:
+        # Full tree for the frontend selects: department -> municipality -> area (zone).
+        # "name" is for display ("El Progreso"), "key" is the original json key ("El_Progreso").
+        # Municipalities split by zones have postal_code None and their codes in "areas".
+        with open(POSTAL_CODE_FILE, encoding="utf-8") as file:
+            postal_codes = json.load(file)
+
+        locations = []
+        for department_key, municipalities in postal_codes.items():
+            municipality_list = []
+            for municipality_key, value in municipalities.items():
+                municipality = {
+                    "key": municipality_key,
+                    "name": _display_name(municipality_key),
+                    "postal_code": None,
+                    "areas": [],
+                }
+                if isinstance(value, dict):
+                    municipality["areas"] = [
+                        {"key": area_key, "name": _display_name(area_key), "postal_code": code}
+                        for area_key, code in value.items()
+                    ]
+                else:
+                    municipality["postal_code"] = value
+                municipality_list.append(municipality)
+
+            locations.append({
+                "key": department_key,
+                "name": _display_name(department_key),
+                "municipalities": municipality_list,
+            })
+
+        return locations
 
 """ 
 def main():
