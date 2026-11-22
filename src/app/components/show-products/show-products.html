@@ -50,20 +50,6 @@
 
         <div class="flex flex-wrap gap-3 text-sm">
           <label class="flex items-center gap-2">
-            Tienda
-            <select
-              [ngModel]="selectedStore()"
-              (ngModelChange)="selectedStore.set($event)"
-              class="rounded-lg border border-gray-300 bg-white px-2 py-1">
-              <option value="">Todas</option>
-              @for (store of stores(); track store.id) {
-                @if (store.ok) {
-                  <option [value]="store.id">{{ store.name }}</option>
-                }
-              }
-            </select>
-          </label>
-          <label class="flex items-center gap-2">
             Ordenar
             <select
               [ngModel]="sort()"
@@ -100,105 +86,200 @@
         </div>
       }
 
-      @if (loading()) {
-        <!-- Skeleton grid -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          @for (i of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; track i) {
-            <div class="rounded-xl bg-white border border-gray-200 p-3 animate-pulse">
-              <div class="aspect-square rounded-lg bg-gray-200 mb-3"></div>
-              <div class="h-3 bg-gray-200 rounded mb-2"></div>
-              <div class="h-3 bg-gray-200 rounded w-2/3 mb-4"></div>
-              <div class="h-5 bg-gray-200 rounded w-1/3"></div>
-            </div>
-          }
-        </div>
-      } @else if (!error() && visibleProducts().length === 0) {
-        <p class="text-center text-gray-500 py-16">No se encontraron productos.</p>
-      } @else {
-        <!-- Product grid -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          @for (product of visibleProducts(); track product.id) {
-            <article
-              class="relative flex flex-col rounded-xl bg-white border border-gray-200 p-3
-              hover:shadow-md transition-shadow">
-              @if (product.discount_percent > 0 && product.available) {
-                <span class="absolute top-2 left-2 z-[1] rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">
-                  -{{ product.discount_percent }}%
-                </span>
-              }
-
-              <div class="aspect-square mb-3 flex items-center justify-center rounded-lg bg-white overflow-hidden">
-                @if (product.image) {
-                  <img
-                    [src]="product.image"
-                    [alt]="product.name"
-                    loading="lazy"
-                    class="max-h-full max-w-full object-contain">
-                } @else {
-                  <span class="text-xs text-gray-400">Sin imagen</span>
-                }
-              </div>
-
-              <span class="text-xs font-medium text-teal-700">
-                {{ storeNames()[product.store] || product.store }}
-              </span>
-              @if (product.brand) {
-                <span class="text-xs text-gray-500 uppercase">{{ product.brand }}</span>
-              }
-              <h2 class="text-sm text-gray-800 line-clamp-2 mb-2" [title]="product.name">
-                {{ product.name }}
-              </h2>
-
-              @if (product.promotions.length) {
-                <div class="flex flex-wrap gap-1 mb-2">
-                  @for (promo of product.promotions; track $index) {
-                    <span class="rounded bg-amber-100 px-1.5 py-0.5 text-[11px] text-amber-800">
-                      {{ promo.label }}
-                    </span>
-                  }
+      <div class="flex flex-col lg:flex-row gap-6">
+        <div class="flex-1 min-w-0">
+          @if (loading()) {
+            <!-- Skeleton grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+              @for (i of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; track i) {
+                <div class="rounded-xl bg-white border border-gray-200 p-3 animate-pulse">
+                  <div class="aspect-square rounded-lg bg-gray-200 mb-3"></div>
+                  <div class="h-3 bg-gray-200 rounded mb-2"></div>
+                  <div class="h-3 bg-gray-200 rounded w-2/3 mb-4"></div>
+                  <div class="h-5 bg-gray-200 rounded w-1/3"></div>
                 </div>
               }
-
-              <div class="mt-auto">
-                @if (product.available && product.price != null) {
-                  <p class="text-lg font-bold text-gray-900">
-                    {{ product.price | currency: product.currency : 'symbol-narrow' }}
-                  </p>
-                  @if (product.regular_price && product.regular_price > product.price) {
-                    <p class="text-xs text-gray-400 line-through">
-                      {{ product.regular_price | currency: product.currency : 'symbol-narrow' }}
-                    </p>
+            </div>
+          } @else if (!error() && visibleProducts().length === 0) {
+            <p class="text-center text-gray-500 py-16">No se encontraron productos.</p>
+          } @else {
+            <!-- Product grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+              @for (product of visibleProducts(); track product.id) {
+                <article
+                  class="relative flex flex-col rounded-xl bg-white border border-gray-200 p-3
+                  hover:shadow-md transition-shadow">
+                  @if (product.discount_percent > 0 && product.available) {
+                    <span class="absolute top-2 left-2 z-[1] rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">
+                      -{{ product.discount_percent }}%
+                    </span>
                   }
-                } @else {
-                  <p class="text-sm font-medium text-gray-500">No disponible</p>
-                }
 
-                @if (product.url) {
-                  <!-- Opens a warning first: the store site uses its own location -->
-                  <a
-                    [href]="product.url"
-                    (click)="$event.preventDefault(); storeWarning.set(product)"
-                    class="mt-2 block text-center rounded-lg border border-teal-600 py-1 text-sm
-                    text-teal-700 hover:bg-teal-50">
-                    Ver en tienda
-                  </a>
-                }
+                  <div class="aspect-square mb-3 flex items-center justify-center rounded-lg bg-white overflow-hidden">
+                    @if (product.image) {
+                      <img
+                        [src]="product.image"
+                        [alt]="product.name"
+                        loading="lazy"
+                        class="max-h-full max-w-full object-contain">
+                    } @else {
+                      <span class="text-xs text-gray-400">Sin imagen</span>
+                    }
+                  </div>
+
+                  <span class="text-xs font-medium text-teal-700">
+                    {{ storeNames()[product.store] || product.store }}
+                  </span>
+                  @if (product.brand) {
+                    <span class="text-xs text-gray-500 uppercase">{{ product.brand }}</span>
+                  }
+                  <h2 class="text-sm text-gray-800 line-clamp-2 mb-2" [title]="product.name">
+                    {{ product.name }}
+                  </h2>
+
+                  @if (product.promotions.length) {
+                    <div class="flex flex-wrap gap-1 mb-2">
+                      @for (promo of product.promotions; track $index) {
+                        <span class="rounded bg-amber-100 px-1.5 py-0.5 text-[11px] text-amber-800">
+                          {{ promo.label }}
+                        </span>
+                      }
+                    </div>
+                  }
+
+                  <div class="mt-auto">
+                    @if (product.available && product.price != null) {
+                      <p class="text-lg font-bold text-gray-900">
+                        {{ product.price | currency: product.currency : 'symbol-narrow' }}
+                      </p>
+                      @if (product.regular_price && product.regular_price > product.price) {
+                        <p class="text-xs text-gray-400 line-through">
+                          {{ product.regular_price | currency: product.currency : 'symbol-narrow' }}
+                        </p>
+                      }
+                    } @else {
+                      <p class="text-sm font-medium text-gray-500">No disponible</p>
+                    }
+
+                    @if (product.url) {
+                      <!-- Opens a warning first: the store site uses its own location -->
+                      <a
+                        [href]="product.url"
+                        (click)="$event.preventDefault(); storeWarning.set(product)"
+                        class="mt-2 block text-center rounded-lg border border-teal-600 py-1 text-sm
+                        text-teal-700 hover:bg-teal-50">
+                        Ver en tienda
+                      </a>
+                    }
+                  </div>
+                </article>
+              }
+            </div>
+
+            @if (hasMore()) {
+              <div class="flex justify-center mt-6">
+                <button
+                  (click)="loadMore()"
+                  [disabled]="loadingMore()"
+                  class="rounded-full px-6 py-2 text-white bg-teal-600 hover:bg-teal-700 disabled:opacity-60">
+                  {{ loadingMore() ? 'Cargando...' : 'Cargar más' }}
+                </button>
               </div>
-            </article>
+            }
           }
         </div>
 
-        @if (hasMore()) {
-          <div class="flex justify-center mt-6">
-            <button
-              (click)="loadMore()"
-              [disabled]="loadingMore()"
-              class="rounded-full px-6 py-2 text-white bg-teal-600 hover:bg-teal-700 disabled:opacity-60">
-              {{ loadingMore() ? 'Cargando...' : 'Cargar más' }}
-            </button>
-          </div>
-        }
-      }
+        <!-- Sidebar: stores and categories of the results -->
+        <aside class="lg:w-64 shrink-0 order-first lg:order-none flex flex-col gap-4 text-sm lg:sticky lg:top-20 lg:self-start">
+          <section class="rounded-xl bg-white border border-gray-200 p-4">
+            <h2 class="font-semibold text-gray-800 mb-2">
+              <i class="fa-solid fa-store text-teal-600 mr-1" aria-hidden="true"></i>
+              Tiendas
+            </h2>
+            <ul class="flex flex-col gap-1">
+              @for (store of storeCounts(); track store.id) {
+                <li>
+                  <label
+                    class="flex items-center gap-2 rounded px-1 py-1"
+                    [class.cursor-pointer]="store.ok"
+                    [class.hover:bg-gray-50]="store.ok"
+                    [title]="store.error ?? ''">
+                    <input
+                      type="checkbox"
+                      [checked]="store.ok && !hiddenStores().includes(store.id)"
+                      [disabled]="!store.ok"
+                      (change)="toggleStore(store.id)"
+                      class="accent-teal-600">
+                    <span class="flex-1" [class.text-gray-400]="!store.ok">{{ store.name }}</span>
+                    @if (store.ok) {
+                      <span class="text-xs text-gray-500">{{ store.shown }}</span>
+                    } @else {
+                      <i class="fa-solid fa-triangle-exclamation text-amber-500" aria-label="Sin resultados"></i>
+                    }
+                  </label>
+                </li>
+              }
+            </ul>
+          </section>
+
+          <section class="rounded-xl bg-white border border-gray-200 p-4">
+            <div class="flex items-center justify-between mb-2">
+              <h2 class="font-semibold text-gray-800">
+                <i class="fa-solid fa-tags text-teal-600 mr-1" aria-hidden="true"></i>
+                Categorías
+              </h2>
+              @if (selectedGroup()) {
+                <button type="button" (click)="selectedGroup.set(null)" class="text-xs text-teal-700 hover:underline">
+                  Ver todas
+                </button>
+              }
+            </div>
+            @if (loading()) {
+              <p class="text-gray-400">Cargando...</p>
+            } @else if (departments().length === 0) {
+              <p class="text-gray-400">Sin categorías</p>
+            } @else {
+              <ul class="flex flex-col gap-0.5 max-h-[60vh] overflow-y-auto">
+                @for (department of departments(); track department.name) {
+                  <li>
+                    <button
+                      type="button"
+                      (click)="selectGroup(department.name)"
+                      class="w-full flex items-center gap-2 rounded px-1 py-1 text-left hover:bg-gray-50"
+                      [class.font-semibold]="isDepartmentOpen(department.name)"
+                      [class.text-teal-700]="isDepartmentOpen(department.name)">
+                      <i
+                        class="fa-solid text-[10px] w-3 text-gray-400"
+                        [class.fa-chevron-down]="isDepartmentOpen(department.name)"
+                        [class.fa-chevron-right]="!isDepartmentOpen(department.name)"
+                        aria-hidden="true"></i>
+                      <span class="flex-1">{{ department.name }}</span>
+                      <span class="text-xs text-gray-500">{{ department.count }}</span>
+                    </button>
+                    @if (isDepartmentOpen(department.name) && department.categories.length) {
+                      <ul class="ml-5 flex flex-col gap-0.5">
+                        @for (category of department.categories; track category.name) {
+                          <li>
+                            <button
+                              type="button"
+                              (click)="selectGroup(department.name, category.name)"
+                              class="w-full flex items-center gap-2 rounded px-1 py-0.5 text-left hover:bg-gray-50"
+                              [class.font-semibold]="selectedGroup()?.category === category.name"
+                              [class.text-teal-700]="selectedGroup()?.category === category.name">
+                              <span class="flex-1">{{ category.name }}</span>
+                              <span class="text-xs text-gray-500">{{ category.count }}</span>
+                            </button>
+                          </li>
+                        }
+                      </ul>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+        </aside>
+      </div>
     }
   </main>
 

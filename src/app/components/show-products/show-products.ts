@@ -11,6 +11,37 @@ import { Product, StoreStatus } from '../../../models/products';
 
 type SortOption = 'relevance' | 'price-asc' | 'price-desc' | 'discount';
 
+// department -> category used by the sidebar
+interface ProductGroup {
+  department: string;
+  category: string | null;
+}
+
+interface CategoryCount {
+  name: string;
+  count: number;
+}
+
+interface DepartmentCount {
+  name: string;
+  count: number;
+  categories: CategoryCount[];
+}
+
+const OTHER = 'Otros';
+
+// Super Fresh has no department, its "category" is the top level
+function productGroup(product: Product): ProductGroup {
+  const { department, category, subcategory } = product.category;
+  if (department) {
+    return { department, category: category ?? null };
+  }
+  if (category) {
+    return { department: category, category: subcategory ?? null };
+  }
+  return { department: OTHER, category: null };
+}
+
 const PAGE_SIZE = 20;
 
 @Component({
@@ -43,8 +74,9 @@ export class ShowProducts {
   // true while at least one store returned a full page
   hasMore = signal(false);
 
-  // filters ('' = every store)
-  selectedStore = signal('');
+  // sidebar filters: stores unchecked by the user, and the department / category clicked
+  hiddenStores = signal<string[]>([]);
+  selectedGroup = signal<ProductGroup | null>(null);
   sort = signal<SortOption>('relevance');
 
   // store warnings closed with the X (they come back on a new search)
@@ -62,9 +94,64 @@ export class ShowProducts {
     return names;
   });
 
+  // products of the checked stores (used for the category counts)
+  private storeFiltered = computed(() => {
+    const hidden = this.hiddenStores();
+    return this.products().filter((product) => !hidden.includes(product.store));
+  });
+
+  // products of the selected category (used for the store counts)
+  private groupFiltered = computed(() => {
+    const selected = this.selectedGroup();
+    if (!selected) {
+      return this.products();
+    }
+    return this.products().filter((product) => {
+      const group = productGroup(product);
+      return (
+        group.department === selected.department &&
+        (selected.category === null || group.category === selected.category)
+      );
+    });
+  });
+
+  // stores in the sidebar with how many products they have in the current category
+  storeCounts = computed(() => {
+    const counts: Record<string, number> = {};
+    for (const product of this.groupFiltered()) {
+      counts[product.store] = (counts[product.store] ?? 0) + 1;
+    }
+    return this.stores().map((store) => ({ ...store, shown: counts[store.id] ?? 0 }));
+  });
+
+  // departments -> categories of the checked stores, the biggest first
+  departments = computed<DepartmentCount[]>(() => {
+    const tree = new Map<string, { count: number; categories: Map<string, number> }>();
+    for (const product of this.storeFiltered()) {
+      const group = productGroup(product);
+      const department = tree.get(group.department) ?? { count: 0, categories: new Map() };
+      department.count++;
+      if (group.category) {
+        department.categories.set(group.category, (department.categories.get(group.category) ?? 0) + 1);
+      }
+      tree.set(group.department, department);
+    }
+
+    const byCount = (a: { count: number }, b: { count: number }) => b.count - a.count;
+    return [...tree.entries()]
+      .map(([name, value]) => ({
+        name,
+        count: value.count,
+        categories: [...value.categories.entries()]
+          .map(([category, count]) => ({ name: category, count }))
+          .sort(byCount),
+      }))
+      .sort(byCount);
+  });
+
   visibleProducts = computed(() => {
-    const store = this.selectedStore();
-    let list = this.products().filter((product) => !store || product.store === store);
+    const hidden = this.hiddenStores();
+    let list = this.groupFiltered().filter((product) => !hidden.includes(product.store));
 
     const sort = this.sort();
     if (sort === 'relevance') {
@@ -97,7 +184,7 @@ export class ShowProducts {
         const query = (params.get('q') ?? '').trim();
         this.searchText = query;
         this.query.set(query);
-        this.selectedStore.set('');
+        this.clearFilters();
         this.load(1);
       });
   }
@@ -114,6 +201,28 @@ export class ShowProducts {
     if (product.url) {
       window.open(product.url, '_blank', 'noopener');
     }
+  }
+
+  toggleStore(storeId: string) {
+    this.hiddenStores.update((ids) =>
+      ids.includes(storeId) ? ids.filter((id) => id !== storeId) : [...ids, storeId],
+    );
+  }
+
+  // click the selected department / category again to remove the filter
+  selectGroup(department: string, category: string | null = null) {
+    const current = this.selectedGroup();
+    const same = current?.department === department && current?.category === category;
+    this.selectedGroup.set(same ? null : { department, category });
+  }
+
+  isDepartmentOpen(department: string) {
+    return this.selectedGroup()?.department === department;
+  }
+
+  clearFilters() {
+    this.hiddenStores.set([]);
+    this.selectedGroup.set(null);
   }
 
   dismissWarning(storeId: string) {
