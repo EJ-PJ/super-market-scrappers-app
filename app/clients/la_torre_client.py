@@ -4,6 +4,7 @@ import json
 import requests
 
 from .base_client import BaseClient, InvalidPostalCode, NoStoreForPostalCode, encode_vtex_segment
+from app.postal_code import get_postal_code_coords
 
 
 class LaTorreClient:
@@ -12,6 +13,8 @@ class LaTorreClient:
     base_url = f"{host}/_v/segment/graphql/v1"
     # postal code -> region and store (seller)
     regions_url = f"{host}/api/checkout/pub/regions"
+    # pickup points near some coordinates, they have the store address
+    pickup_points_url = f"{host}/api/checkout/pub/pickup-points"
 
     # VTEX sales channel of La Torre ("sc" param)
     sales_channel = 1
@@ -21,6 +24,8 @@ class LaTorreClient:
 
     # postal code -> {"region_id", "seller"}, shared between requests
     _region_cache: dict = {}
+    # postal code -> {"name", "address", "distance_km"}
+    _branch_cache: dict = {}
 
     querystring = {"workspace": "master", "maxAge": "short", "appsEtag": "remove",
                    "domain": "store", "locale": "es-GT", "operationName": "productSearchV3",
@@ -115,12 +120,55 @@ class LaTorreClient:
             raise
 
         regions = response.json()
-        sellers = [seller["id"] for seller in (regions[0].get("sellers") or [])] if regions else []
+        sellers = {seller["id"]: seller.get("name") for seller in (regions[0].get("sellers") or [])} if regions else {}
         if not sellers:
             raise NoStoreForPostalCode(postal_code)
 
-        seller = next((s for s in sellers if s.startswith(self.seller_prefix)), sellers[0])
-        region = {"region_id": regions[0]["id"], "seller": seller}
+        # only the store's own branches: other sellers are marketplace vendors
+        # (e.g. Walmart in Huehuetenango only has "Andreiso store")
+        seller = next((s for s in sellers if s.startswith(self.seller_prefix)), None)
+        if seller is None:
+            raise NoStoreForPostalCode(postal_code)
+        region = {"region_id": regions[0]["id"], "seller": seller, "seller_name": sellers[seller] or seller}
 
         self._region_cache[postal_code] = region
         return region
+
+    def get_branch(self, postal_code):
+        # store (branch) used for this postal code: name, address and distance to the zone.
+        # None without postal code (the store uses its default prices)
+        if not postal_code:
+            return None
+        if postal_code in self._branch_cache:
+            return self._branch_cache[postal_code]
+
+        region = self.get_region(postal_code)
+        branch = {"name": self.branch_name(region), "address": None, "distance_km": None}
+
+        # the pickup points near the zone have the address, their id starts with the seller
+        coords = get_postal_code_coords(postal_code)
+        if coords:
+            response = BaseClient().get(
+                self.pickup_points_url,
+                headers=self.headers,
+                params={"geoCoordinates": f"{coords['longitude']};{coords['latitude']}", "sc": self.sales_channel},
+            )
+            for item in response.json().get("items") or []:
+                point = item.get("pickupPoint") or {}
+                if not str(point.get("id", "")).startswith(region["seller"] + "_"):
+                    continue
+                address = point.get("address") or {}
+                branch["name"] = point.get("friendlyName") or branch["name"]
+                branch["address"] = ", ".join(p for p in (address.get("street"), address.get("city")) if p) or None
+                if item.get("distance") is not None:
+                    branch["distance_km"] = round(item["distance"], 1)
+                break
+
+        self._branch_cache[postal_code] = branch
+        return branch
+
+    def branch_name(self, region):
+        # La Torre only sends ids as names ("latorremxlatorre20calle") and its pickup
+        # points don't match the sellers, so the address is not available
+        name = region["seller"].removeprefix("latorremx").removeprefix("latorre")
+        return f"La Torre {name}" if name else "La Torre"

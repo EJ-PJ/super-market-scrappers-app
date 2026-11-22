@@ -12,3 +12,7 @@ class WalmartScrapper:
         raw_products = WalmartClient().search_products(product, from_index, to_index, postal_code)
 
         return WalmartScrapperProduct().product_parser(raw_products)
+
+    def get_branch(self, postal_code: str | None = None) -> dict | None:
+        # name / address of the store used for this postal code
+        return WalmartClient().get_branch(postal_code)

@@ -3,6 +3,26 @@ import unicodedata
 from pathlib import Path
 
 POSTAL_CODE_FILE = Path(__file__).parent / "postal_code.json"
+# also has the coordinates of every postal code (made by scripts/build_super_fresh_stores.py)
+SUPER_FRESH_STORES_FILE = Path(__file__).parent / "super_fresh_stores.json"
+
+_coords_cache: dict | None = None
+
+
+def get_postal_code_coords(postal_code: str) -> dict | None:
+    # {"latitude", "longitude"} of the zone / municipality, None if unknown
+    global _coords_cache
+    if _coords_cache is None:
+        try:
+            data = json.loads(SUPER_FRESH_STORES_FILE.read_text(encoding="utf-8"))
+            _coords_cache = data.get("postal_codes", {})
+        except FileNotFoundError:
+            _coords_cache = {}
+
+    entry = _coords_cache.get(postal_code) or {}
+    if entry.get("latitude") is None or entry.get("longitude") is None:
+        return None
+    return {"latitude": entry["latitude"], "longitude": entry["longitude"]}
 
 
 def _normalize(text: str) -> str: # Lowercase and remove accents so "Sacatepéquez" matches "sacatepequez"

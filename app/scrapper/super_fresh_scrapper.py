@@ -13,3 +13,7 @@ class SuperFreshScrapper:
         # the Super Fresh API returns every result at once, so paginate here
         start = (page - 1) * page_size
         return parsed[start:start + page_size]
+
+    def get_branch(self, postal_code: str | None = None) -> dict | None:
+        # name / address of the store used for this postal code
+        return SuperFreshClient().get_branch(postal_code)

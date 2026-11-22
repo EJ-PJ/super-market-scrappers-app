@@ -11,6 +11,7 @@ class SuperFreshClient:
 
     # loaded once from STORES_FILE
     _stores_by_postal_code: dict | None = None
+    _stores: dict = {}
     _default_store: int = 2
 
     # https://msf-api.gta.com.gt/api/products/search
@@ -62,6 +63,7 @@ class SuperFreshClient:
                 # table not generated yet: every search uses the default store
                 data = {}
             cls._stores_by_postal_code = data.get("postal_codes", {})
+            cls._stores = data.get("stores", {})
             cls._default_store = data.get("default_store", cls._default_store)
 
         if not postal_code or not cls._stores_by_postal_code:
@@ -72,3 +74,16 @@ class SuperFreshClient:
             # no Super Fresh store inside its coverage radius for that zone
             raise NoStoreForPostalCode(postal_code)
         return store
+
+    def get_branch(self, postal_code=None):
+        # Super Fresh always uses a store (Martinico without postal code)
+        code = self.get_store(postal_code)
+        store = type(self)._stores.get(str(code))
+        if not store:
+            return None
+        entry = (type(self)._stores_by_postal_code or {}).get(postal_code or "") or {}
+        return {
+            "name": store.get("name"),
+            "address": store.get("address"),
+            "distance_km": entry.get("distance_km") if postal_code else None,
+        }

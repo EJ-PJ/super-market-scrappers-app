@@ -49,10 +49,12 @@ class Products:
 
     def _search_store(self, store_id: str, query: str, page: int, page_size: int, postal_code: str | None):
         store = STORES[store_id]
-        status = {"id": store_id, "name": store["name"], "ok": True, "count": 0, "error": None}
+        # branch: store used for the postal code {"name", "address", "distance_km"} or None
+        status = {"id": store_id, "name": store["name"], "ok": True, "count": 0, "error": None, "branch": None}
+        scrapper = store["scrapper"]()
 
         try:
-            products = store["scrapper"]().search_products(query, page, page_size, postal_code)
+            products = scrapper.search_products(query, page, page_size, postal_code)
         except (InvalidPostalCode, NoStoreForPostalCode) as error:
             status["ok"] = False
             status["error"] = error_message(error)
@@ -64,6 +66,11 @@ class Products:
             return status, []
 
         status["count"] = len(products)
+        try:
+            status["branch"] = scrapper.get_branch(postal_code)
+        except Exception:
+            # without the branch info the products are still useful
+            logger.exception("Error getting the branch of %s", store_id)
         return status, products
 
 

@@ -12,3 +12,7 @@ class LaTorreScrapper:
         raw_products = LaTorreClient().search_products(product, from_index, to_index, postal_code)
 
         return LaTorreScrapperProduct().product_parser(raw_products)
+
+    def get_branch(self, postal_code: str | None = None) -> dict | None:
+        # name / address of the store used for this postal code
+        return LaTorreClient().get_branch(postal_code)
