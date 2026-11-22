@@ -1,1 +1,179 @@
-<p>show-products works!</p>
+<div class="min-h-screen bg-gray-50">
+  <!-- Header: back + search bar -->
+  <header class="sticky top-0 z-10 bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
+      <form (ngSubmit)="search()" class="flex-1 flex gap-2">
+        <input
+          [(ngModel)]="searchText"
+          name="query"
+          type="text"
+          placeholder="Buscar productos"
+          class="flex-1 min-w-0 rounded-full h-10 px-4 border-2 border-gray-100 shadow-sm
+          outline-none focus:border-teal-200">
+        <button
+          type="submit"
+          class="rounded-full h-10 px-4 text-sm text-white bg-teal-600 hover:bg-teal-700">
+          Buscar
+        </button>
+      </form>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6">
+    @if (!query()) {
+      <p class="text-center text-gray-500 py-16">Escribe un producto para buscar.</p>
+    } @else {
+      <!-- Title + filters -->
+      <div class="flex flex-wrap items-end justify-between gap-4 mb-4">
+        <div>
+          <h1 class="text-2xl font-semibold text-gray-800">Resultados para "{{ query() }}"</h1>
+          @if (!loading()) {
+            <p class="text-sm text-gray-500">{{ visibleProducts().length }} productos</p>
+          }
+        </div>
+
+        <div class="flex flex-wrap gap-3 text-sm">
+          <label class="flex items-center gap-2">
+            Tienda
+            <select
+              [ngModel]="selectedStore()"
+              (ngModelChange)="selectedStore.set($event)"
+              class="rounded-lg border border-gray-300 bg-white px-2 py-1">
+              <option value="">Todas</option>
+              @for (store of stores(); track store.id) {
+                @if (store.ok) {
+                  <option [value]="store.id">{{ store.name }}</option>
+                }
+              }
+            </select>
+          </label>
+          <label class="flex items-center gap-2">
+            Ordenar
+            <select
+              [ngModel]="sort()"
+              (ngModelChange)="sort.set($event)"
+              class="rounded-lg border border-gray-300 bg-white px-2 py-1">
+              <option value="relevance">Relevancia</option>
+              <option value="price-asc">Precio: menor a mayor</option>
+              <option value="price-desc">Precio: mayor a menor</option>
+              <option value="discount">Mayor descuento</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <!-- Stores that failed: the others still show their products -->
+      @for (store of failedStores(); track store.id) {
+        <div class="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-800">
+          <strong>{{ store.name }}:</strong> {{ store.error }}. Se muestran los resultados de las demás tiendas.
+        </div>
+      }
+
+      @if (error()) {
+        <div class="mb-3 rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-700">
+          {{ error() }}
+        </div>
+      }
+
+      @if (loading()) {
+        <!-- Skeleton grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          @for (i of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; track i) {
+            <div class="rounded-xl bg-white border border-gray-200 p-3 animate-pulse">
+              <div class="aspect-square rounded-lg bg-gray-200 mb-3"></div>
+              <div class="h-3 bg-gray-200 rounded mb-2"></div>
+              <div class="h-3 bg-gray-200 rounded w-2/3 mb-4"></div>
+              <div class="h-5 bg-gray-200 rounded w-1/3"></div>
+            </div>
+          }
+        </div>
+      } @else if (!error() && visibleProducts().length === 0) {
+        <p class="text-center text-gray-500 py-16">No se encontraron productos.</p>
+      } @else {
+        <!-- Product grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          @for (product of visibleProducts(); track product.id) {
+            <article
+              class="relative flex flex-col rounded-xl bg-white border border-gray-200 p-3
+              hover:shadow-md transition-shadow">
+              @if (product.discount_percent > 0 && product.available) {
+                <span class="absolute top-2 left-2 z-[1] rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">
+                  -{{ product.discount_percent }}%
+                </span>
+              }
+
+              <div class="aspect-square mb-3 flex items-center justify-center rounded-lg bg-white overflow-hidden">
+                @if (product.image) {
+                  <img
+                    [src]="product.image"
+                    [alt]="product.name"
+                    loading="lazy"
+                    class="max-h-full max-w-full object-contain">
+                } @else {
+                  <span class="text-xs text-gray-400">Sin imagen</span>
+                }
+              </div>
+
+              <span class="text-xs font-medium text-teal-700">
+                {{ storeNames()[product.store] || product.store }}
+              </span>
+              @if (product.brand) {
+                <span class="text-xs text-gray-500 uppercase">{{ product.brand }}</span>
+              }
+              <h2 class="text-sm text-gray-800 line-clamp-2 mb-2" [title]="product.name">
+                {{ product.name }}
+              </h2>
+
+              @if (product.promotions.length) {
+                <div class="flex flex-wrap gap-1 mb-2">
+                  @for (promo of product.promotions; track $index) {
+                    <span class="rounded bg-amber-100 px-1.5 py-0.5 text-[11px] text-amber-800">
+                      {{ promo.label }}
+                    </span>
+                  }
+                </div>
+              }
+
+              <div class="mt-auto">
+                @if (product.available && product.price != null) {
+                  <p class="text-lg font-bold text-gray-900">
+                    {{ product.price | currency: product.currency : 'symbol-narrow' }}
+                  </p>
+                  @if (product.regular_price && product.regular_price > product.price) {
+                    <p class="text-xs text-gray-400 line-through">
+                      {{ product.regular_price | currency: product.currency : 'symbol-narrow' }}
+                    </p>
+                  }
+                } @else {
+                  <p class="text-sm font-medium text-gray-500">No disponible</p>
+                }
+
+                @if (product.url) {
+                  <a
+                    [href]="product.url"
+                    target="_blank"
+                    rel="noopener"
+                    class="mt-2 block text-center rounded-lg border border-teal-600 py-1 text-sm
+                    text-teal-700 hover:bg-teal-50">
+                    Ver en tienda
+                  </a>
+                }
+              </div>
+            </article>
+          }
+        </div>
+
+        @if (hasMore()) {
+          <div class="flex justify-center mt-6">
+            <button
+              (click)="loadMore()"
+              [disabled]="loadingMore()"
+              class="rounded-full px-6 py-2 text-white bg-teal-600 hover:bg-teal-700 disabled:opacity-60">
+              {{ loadingMore() ? 'Cargando...' : 'Cargar más' }}
+            </button>
+          </div>
+        }
+      }
+    }
+  </main>
+</div>

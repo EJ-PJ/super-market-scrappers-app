@@ -1,57 +1,52 @@
-export interface Subcategory {
+// Same shape the Flask backend returns in GET /api/v1/products
+// (backend: app/models/product.py and app/services/product_service.py)
+
+export interface ProductCategory {
+  department: string | null;
+  category: string | null;
+  subcategory: string | null;
+}
+
+export interface Promotion {
+  // bundle: "2 x Q20", combo: "Combina 3 x Q30", badge: "Precio bajo exclusivo en línea"
+  type: 'bundle' | 'combo' | 'badge' | string;
+  label: string;
+  [key: string]: unknown;
+}
+
+export interface Product {
+  id: string; // "<store>:<product id>"
+  store: string; // store id, e.g. "maxi_despensa"
+  name: string | null;
+  brand: string | null;
+  price: number | null; // what you pay today (with discount)
+  regular_price: number | null; // price before discount
+  discount_percent: number;
+  currency: string;
+  available: boolean; // false = out of stock or without price
+  promotions: Promotion[];
+  image: string | null;
+  url: string | null;
+  category: ProductCategory;
+}
+
+export interface StoreStatus {
+  id: string;
   name: string;
+  ok: boolean; // false = the store failed, the others still return products
+  count: number;
+  error: string | null;
 }
 
-export interface Category {
-  department: string;
+export interface SearchResponse {
+  query: string;
+  page: number;
+  page_size: number;
+  stores: StoreStatus[];
+  products: Product[];
+}
+
+export interface Store {
+  id: string;
   name: string;
-  subcategory: Subcategory;
-}
-
-export interface Products {
-  ListPrice: number;
-  Price: number;
-  brand: string;
-  category: Category;
-  description: string;
-  img: string;
-  offerHighlight: unknown[][];
-  price: string;
-  url: string;
-}
-
-export interface MaxiDespensa {
-  products: Products[];
-}
-
-export interface Subcategory2 {
-  name: string;
-}
-
-export interface Category2 {
-  name: string;
-  subcategory: Subcategory2;
-}
-
-export interface Products2 {
-  category: Category2;
-  description: string;
-  img: string;
-  offerHighlight: unknown[];
-  price: number;
-  price_offer: unknown;
-  url: string;
-}
-
-export interface SuperFresh {
-  products: Products2[];
-}
-
-export interface Data {
-  maxi_despensa: MaxiDespensa;
-  super_fresh: SuperFresh;
-}
-
-export interface Root {
-  data: Data;
 }

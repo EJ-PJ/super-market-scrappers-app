@@ -15,14 +15,15 @@ export class Search {
   router = inject(Router)
 
   searchProduct(){
-    if(this.product == ''){
-      this.empty_entry = true
-      console.log('this is empty');
+    const query = this.product.trim()
 
-    } else {
-      console.log('this was press ');
-      this.router.navigate(['products'])
+    if(query == ''){
+      this.empty_entry = true
+      return
     }
-    this.product = ""
+
+    this.empty_entry = false
+    // the search term goes in the url: /products?q=leche
+    this.router.navigate(['products'], { queryParams: { q: query } })
   }
 }

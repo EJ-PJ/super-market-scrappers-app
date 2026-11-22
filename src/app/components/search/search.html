@@ -1,18 +1,21 @@
-<div class="flex flex-col justify-center items-center min-h-screen gap-4">
-  <h1>Buscar Productos</h1>
-  <div class="relative w-full max-w-xl mx-auto bg-white rounded-full">
+<div class="flex flex-col justify-center items-center min-h-screen gap-4 px-4">
+  <h1 class="text-3xl font-semibold text-gray-800">Buscar Productos</h1>
+  <form
+    (ngSubmit)="searchProduct()"
+    class="relative w-full max-w-xl mx-auto bg-white rounded-full">
     <input
        [(ngModel)]="product"
-       placeholder="e.g. Blog"
+       (ngModelChange)="empty_entry = false"
+       placeholder="Ej. leche, arroz, coca cola"
        class="rounded-full w-full h-16
        bg-transparent py-2 pl-8 pr-32 outline-none
        border-2 border-gray-100 shadow-md hover:outline-none
        focus:ring-teal-200 focus:border-teal-200"
        type="text"
        name="query"
-       id="query">
+       id="query"
+       autofocus>
     <button
-      (click)="searchProduct()"
       type="submit"
       class="absolute inline-flex items-center h-10 px-4
       py-2 text-sm text-white transition duration-150
@@ -35,5 +38,8 @@
       </svg>
       Buscar
     </button>
-  </div>
+  </form>
+  @if (empty_entry) {
+    <p class="text-sm text-red-600">Escribe un producto para buscar</p>
+  }
 </div>
