@@ -1,1 +1,376 @@
-<p>show-products works!</p>
+<div class="min-h-screen bg-gray-50">
+  <!-- Header: back + search bar -->
+  <header class="sticky top-0 z-10 bg-white border-b border-gray-200">
+    <div class="max-w-screen-2xl mx-auto px-4 py-3 flex items-center gap-3">
+      <form (ngSubmit)="search()" class="flex-1 flex gap-2">
+        <input
+          [(ngModel)]="searchText"
+          name="query"
+          type="text"
+          placeholder="Buscar productos"
+          class="flex-1 min-w-0 rounded-full h-10 px-4 border-2 border-gray-100 shadow-sm
+          outline-none focus:border-teal-200">
+        <button
+          type="submit"
+          class="rounded-full h-10 px-4 text-sm text-white bg-teal-600 hover:bg-teal-700">
+          Buscar
+        </button>
+      </form>
+      <button
+        type="button"
+        (click)="showLocation.set(!showLocation())"
+        [attr.aria-expanded]="showLocation()"
+        class="max-w-56 truncate rounded-full h-10 px-4 text-sm border border-gray-300 hover:bg-gray-50">
+        <i class="fa-solid fa-location-dot text-teal-600 mr-1" aria-hidden="true"></i>
+        {{ location.selected()?.label ?? 'Elegir zona' }}
+      </button>
+    </div>
+    @if (showLocation()) {
+      <div class="max-w-screen-2xl mx-auto px-4 pb-3">
+        <app-location-picker (changed)="showLocation.set(false)" />
+      </div>
+    }
+  </header>
+
+  <main class="max-w-screen-2xl mx-auto px-4 py-6">
+    @if (!query()) {
+      <p class="text-center text-gray-500 py-16">Escribe un producto para buscar.</p>
+    } @else {
+      <!-- Title + filters -->
+      <div class="flex flex-wrap items-end justify-between gap-4 mb-4">
+        <div>
+          <h1 class="text-2xl font-semibold text-gray-800">Resultados para "{{ query() }}"</h1>
+          @if (!loading()) {
+            <p class="text-sm text-gray-500">
+              {{ visibleProducts().length }} productos
+              · {{ location.selected() ? 'precios para ' + location.selected()!.label : 'precios generales (sin ubicación)' }}
+            </p>
+          }
+        </div>
+
+        <div class="flex flex-wrap gap-3 text-sm">
+          <label class="flex items-center gap-2">
+            Ordenar
+            <select
+              [ngModel]="sort()"
+              (ngModelChange)="sort.set($event)"
+              class="rounded-lg border border-gray-300 bg-white px-2 py-1">
+              <option value="relevance">Relevancia</option>
+              <option value="price-asc">Precio: menor a mayor</option>
+              <option value="price-desc">Precio: mayor a menor</option>
+              <option value="discount">Mayor descuento</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <!-- Stores that failed: the others still show their products -->
+      @for (store of failedStores(); track store.id) {
+        <div class="mb-3 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-800">
+          <p class="flex-1">
+            <strong>{{ store.name }}:</strong> {{ store.error }}. Se muestran los resultados de las demás tiendas.
+          </p>
+          <button
+            type="button"
+            (click)="dismissWarning(store.id)"
+            [attr.aria-label]="'Cerrar aviso de ' + store.name"
+            class="-mr-1 rounded px-1.5 leading-none text-lg text-amber-700 hover:bg-amber-100">
+            ×
+          </button>
+        </div>
+      }
+
+      @if (error()) {
+        <div class="mb-3 rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-700">
+          {{ error() }}
+        </div>
+      }
+
+      <div class="flex flex-col lg:flex-row gap-6">
+        <!-- Left sidebar: branch of each store used for the search -->
+        <aside class="lg:w-64 shrink-0 order-1 lg:order-none text-sm lg:sticky lg:top-20 lg:self-start">
+          <section class="rounded-xl bg-white border border-gray-200 p-4">
+            <h2 class="font-semibold text-gray-800 mb-1">
+              <i class="fa-solid fa-shop text-teal-600 mr-1" aria-hidden="true"></i>
+              Sucursales consultadas
+            </h2>
+            <p class="text-xs text-gray-500 mb-3">
+              @if (location.selected(); as selected) {
+                Para <strong>{{ selected.label }}</strong>
+              } @else {
+                Sin ubicación: precios generales de cada tienda
+              }
+            </p>
+
+            @if (loading()) {
+              <p class="text-gray-400">Cargando...</p>
+            } @else {
+              <ul class="flex flex-col gap-3">
+                @for (store of stores(); track store.id) {
+                  <li class="border-l-2 pl-2" [class.border-teal-500]="store.ok" [class.border-gray-200]="!store.ok">
+                    <p class="font-medium text-gray-800">{{ store.name }}</p>
+                    @if (!store.ok) {
+                      <p class="text-xs text-amber-700">
+                        <i class="fa-solid fa-triangle-exclamation mr-1" aria-hidden="true"></i>{{ store.error }}
+                      </p>
+                    } @else if (store.branch; as branch) {
+                      <p class="text-xs text-gray-700">{{ branch.name }}</p>
+                      <p class="text-xs text-gray-500">
+                        <i class="fa-solid fa-location-dot mr-1" aria-hidden="true"></i>{{ branch.address ?? 'Dirección no disponible' }}
+                      </p>
+                      @if (branch.distance_km != null) {
+                        <p class="text-xs text-gray-400">a {{ branch.distance_km }} km de la zona</p>
+                      }
+                    } @else {
+                      <p class="text-xs text-gray-500">Sucursal por defecto de la tienda</p>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+        </aside>
+
+        <div class="flex-1 min-w-0 order-3 lg:order-none">
+          @if (loading()) {
+            <!-- Skeleton grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 2xl:grid-cols-4 gap-4">
+              @for (i of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; track i) {
+                <div class="rounded-xl bg-white border border-gray-200 p-3 animate-pulse">
+                  <div class="aspect-square rounded-lg bg-gray-200 mb-3"></div>
+                  <div class="h-3 bg-gray-200 rounded mb-2"></div>
+                  <div class="h-3 bg-gray-200 rounded w-2/3 mb-4"></div>
+                  <div class="h-5 bg-gray-200 rounded w-1/3"></div>
+                </div>
+              }
+            </div>
+          } @else if (!error() && visibleProducts().length === 0) {
+            <p class="text-center text-gray-500 py-16">No se encontraron productos.</p>
+          } @else {
+            <!-- Product grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 2xl:grid-cols-4 gap-4">
+              @for (product of visibleProducts(); track product.id) {
+                <article
+                  class="relative flex flex-col rounded-xl bg-white border border-gray-200 p-3
+                  hover:shadow-md transition-shadow">
+                  @if (product.discount_percent > 0 && product.available) {
+                    <span class="absolute top-2 left-2 z-[1] rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">
+                      -{{ product.discount_percent }}%
+                    </span>
+                  }
+
+                  <div class="aspect-square mb-3 flex items-center justify-center rounded-lg bg-white overflow-hidden">
+                    @if (product.image) {
+                      <img
+                        [src]="product.image"
+                        [alt]="product.name"
+                        loading="lazy"
+                        class="max-h-full max-w-full object-contain">
+                    } @else {
+                      <span class="text-xs text-gray-400">Sin imagen</span>
+                    }
+                  </div>
+
+                  <span class="text-xs font-medium text-teal-700">
+                    {{ storeNames()[product.store] || product.store }}
+                  </span>
+                  @if (product.brand) {
+                    <span class="text-xs text-gray-500 uppercase">{{ product.brand }}</span>
+                  }
+                  <h2 class="text-sm text-gray-800 line-clamp-2 mb-2" [title]="product.name">
+                    {{ product.name }}
+                  </h2>
+
+                  @if (product.promotions.length) {
+                    <div class="flex flex-wrap gap-1 mb-2">
+                      @for (promo of product.promotions; track $index) {
+                        <span class="rounded bg-amber-100 px-1.5 py-0.5 text-[11px] text-amber-800">
+                          {{ promo.label }}
+                        </span>
+                      }
+                    </div>
+                  }
+
+                  <div class="mt-auto">
+                    @if (product.available && product.price != null) {
+                      <p class="text-lg font-bold text-gray-900">
+                        {{ product.price | currency: product.currency : 'symbol-narrow' }}
+                      </p>
+                      @if (product.regular_price && product.regular_price > product.price) {
+                        <p class="text-xs text-gray-400 line-through">
+                          {{ product.regular_price | currency: product.currency : 'symbol-narrow' }}
+                        </p>
+                      }
+                    } @else {
+                      <p class="text-sm font-medium text-gray-500">No disponible</p>
+                    }
+
+                    @if (product.url) {
+                      <!-- Opens a warning first: the store site uses its own location -->
+                      <a
+                        [href]="product.url"
+                        (click)="$event.preventDefault(); storeWarning.set(product)"
+                        class="mt-2 block text-center rounded-lg border border-teal-600 py-1 text-sm
+                        text-teal-700 hover:bg-teal-50">
+                        Ver en tienda
+                      </a>
+                    }
+                  </div>
+                </article>
+              }
+            </div>
+
+            @if (hasMore()) {
+              <div class="flex justify-center mt-6">
+                <button
+                  (click)="loadMore()"
+                  [disabled]="loadingMore()"
+                  class="rounded-full px-6 py-2 text-white bg-teal-600 hover:bg-teal-700 disabled:opacity-60">
+                  {{ loadingMore() ? 'Cargando...' : 'Cargar más' }}
+                </button>
+              </div>
+            }
+          }
+        </div>
+
+        <!-- Sidebar: stores and categories of the results -->
+        <aside class="lg:w-64 shrink-0 order-2 lg:order-none flex flex-col gap-4 text-sm lg:sticky lg:top-20 lg:self-start">
+          <section class="rounded-xl bg-white border border-gray-200 p-4">
+            <h2 class="font-semibold text-gray-800 mb-2">
+              <i class="fa-solid fa-store text-teal-600 mr-1" aria-hidden="true"></i>
+              Tiendas
+            </h2>
+            <ul class="flex flex-col gap-1">
+              @for (store of storeCounts(); track store.id) {
+                <li>
+                  <label
+                    class="flex items-center gap-2 rounded px-1 py-1"
+                    [class.cursor-pointer]="store.ok"
+                    [class.hover:bg-gray-50]="store.ok"
+                    [title]="store.error ?? ''">
+                    <input
+                      type="checkbox"
+                      [checked]="store.ok && !hiddenStores().includes(store.id)"
+                      [disabled]="!store.ok"
+                      (change)="toggleStore(store.id)"
+                      class="accent-teal-600">
+                    <span class="flex-1" [class.text-gray-400]="!store.ok">{{ store.name }}</span>
+                    @if (store.ok) {
+                      <span class="text-xs text-gray-500">{{ store.shown }}</span>
+                    } @else {
+                      <i class="fa-solid fa-triangle-exclamation text-amber-500" aria-label="Sin resultados"></i>
+                    }
+                  </label>
+                </li>
+              }
+            </ul>
+          </section>
+
+          <section class="rounded-xl bg-white border border-gray-200 p-4">
+            <div class="flex items-center justify-between mb-2">
+              <h2 class="font-semibold text-gray-800">
+                <i class="fa-solid fa-tags text-teal-600 mr-1" aria-hidden="true"></i>
+                Categorías
+              </h2>
+              @if (selectedGroup()) {
+                <button type="button" (click)="selectedGroup.set(null)" class="text-xs text-teal-700 hover:underline">
+                  Ver todas
+                </button>
+              }
+            </div>
+            @if (loading()) {
+              <p class="text-gray-400">Cargando...</p>
+            } @else if (departments().length === 0) {
+              <p class="text-gray-400">Sin categorías</p>
+            } @else {
+              <ul class="flex flex-col gap-0.5 max-h-[60vh] overflow-y-auto">
+                @for (department of departments(); track department.name) {
+                  <li>
+                    <button
+                      type="button"
+                      (click)="selectGroup(department.name)"
+                      class="w-full flex items-center gap-2 rounded px-1 py-1 text-left hover:bg-gray-50"
+                      [class.font-semibold]="isDepartmentOpen(department.name)"
+                      [class.text-teal-700]="isDepartmentOpen(department.name)">
+                      <i
+                        class="fa-solid text-[10px] w-3 text-gray-400"
+                        [class.fa-chevron-down]="isDepartmentOpen(department.name)"
+                        [class.fa-chevron-right]="!isDepartmentOpen(department.name)"
+                        aria-hidden="true"></i>
+                      <span class="flex-1">{{ department.name }}</span>
+                      <span class="text-xs text-gray-500">{{ department.count }}</span>
+                    </button>
+                    @if (isDepartmentOpen(department.name) && department.categories.length) {
+                      <ul class="ml-5 flex flex-col gap-0.5">
+                        @for (category of department.categories; track category.name) {
+                          <li>
+                            <button
+                              type="button"
+                              (click)="selectGroup(department.name, category.name)"
+                              class="w-full flex items-center gap-2 rounded px-1 py-0.5 text-left hover:bg-gray-50"
+                              [class.font-semibold]="selectedGroup()?.category === category.name"
+                              [class.text-teal-700]="selectedGroup()?.category === category.name">
+                              <span class="flex-1">{{ category.name }}</span>
+                              <span class="text-xs text-gray-500">{{ category.count }}</span>
+                            </button>
+                          </li>
+                        }
+                      </ul>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+        </aside>
+      </div>
+    }
+  </main>
+
+  <!-- Warning before opening the store site -->
+  @if (storeWarning(); as product) {
+    <div
+      class="fixed inset-0 z-20 flex items-center justify-center bg-black/40 px-4"
+      (click)="storeWarning.set(null)">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="store-warning-title"
+        class="w-full max-w-md rounded-xl bg-white p-5 shadow-xl"
+        (click)="$event.stopPropagation()">
+        <h2 id="store-warning-title" class="text-lg font-semibold text-gray-800 mb-2">
+          ⚠️ Cambia la ubicación en la tienda
+        </h2>
+        <p class="text-sm text-gray-600 mb-2">
+          Vas a abrir <strong>{{ storeNames()[product.store] || product.store }}</strong>.
+          La página de la tienda no sabe qué ubicación elegiste aquí.
+        </p>
+        @if (location.selected(); as selected) {
+          <p class="text-sm text-gray-600 mb-4">
+            Para ver este producto con el mismo precio y disponibilidad, cambia manualmente la
+            ubicación en la tienda a <strong>{{ selected.label }}</strong>.
+          </p>
+        } @else {
+          <p class="text-sm text-gray-600 mb-4">
+            Aquí se muestran los precios generales. Si la tienda te pide elegir una ubicación,
+            el precio o la disponibilidad pueden cambiar.
+          </p>
+        }
+        <div class="flex justify-end gap-2">
+          <button
+            type="button"
+            (click)="storeWarning.set(null)"
+            class="rounded-lg px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            Cancelar
+          </button>
+          <button
+            type="button"
+            (click)="openStore(product)"
+            class="rounded-lg px-4 py-2 text-sm text-white bg-teal-600 hover:bg-teal-700">
+            Entendido, ir a la tienda
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
