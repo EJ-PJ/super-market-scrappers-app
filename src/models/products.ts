@@ -30,12 +30,20 @@ export interface Product {
   category: ProductCategory;
 }
 
+// Store (branch) used for the chosen postal code
+export interface Branch {
+  name: string | null;
+  address: string | null; // La Torre doesn't publish addresses
+  distance_km: number | null; // from the chosen zone
+}
+
 export interface StoreStatus {
   id: string;
   name: string;
   ok: boolean; // false = the store failed, the others still return products
   count: number;
   error: string | null;
+  branch: Branch | null; // null = no location chosen (default prices) or the store failed
 }
 
 export interface SearchResponse {
