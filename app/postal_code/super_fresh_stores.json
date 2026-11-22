@@ -2880,6 +2880,206 @@
       "approximate": false,
       "store": null,
       "distance_km": null
+    },
+    "13027": {
+      "place": "Aguacatán, Huehuetenango",
+      "latitude": 15.342307,
+      "longitude": -91.31336,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13028": {
+      "place": "San Rafael Petzal, Huehuetenango",
+      "latitude": 15.4049467,
+      "longitude": -91.6645226,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13029": {
+      "place": "San Gaspar Ixchil, Huehuetenango",
+      "latitude": 15.3877798,
+      "longitude": -91.7273014,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13030": {
+      "place": "Santiago Chimaltenango, Huehuetenango",
+      "latitude": 15.476337,
+      "longitude": -91.696735,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13031": {
+      "place": "Santa Ana Huista, Huehuetenango",
+      "latitude": 15.6814012,
+      "longitude": -91.8204327,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13032": {
+      "place": "Gracias A Dios (Nentón), Huehuetenango",
+      "latitude": 16.0391625,
+      "longitude": -91.7462682,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13033": {
+      "place": "San Lorenzo (Huehuetenango), Huehuetenango",
+      "latitude": 15.288731,
+      "longitude": -91.4592236,
+      "approximate": false,
+      "store": 230,
+      "distance_km": 6.4
+    },
+    "13034": {
+      "place": "San Martín Cuchumatán (Todos Santos Cuchumatán), Huehuetenango",
+      "latitude": 15.5757419,
+      "longitude": -91.6692007,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13035": {
+      "place": "San Marcos Huista (Jacaltenango), Huehuetenango",
+      "latitude": 15.6794974,
+      "longitude": -91.7058061,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13036": {
+      "place": "Petatán (Concepción), Huehuetenango",
+      "latitude": 15.6245247,
+      "longitude": -91.7315269,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13037": {
+      "place": "Paquix (Chiantla), Huehuetenango",
+      "latitude": 15.4449781,
+      "longitude": -91.4539719,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13038": {
+      "place": "Michicoy (San Pedro Necta), Huehuetenango",
+      "latitude": 15.5595703,
+      "longitude": -91.7823976,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13039": {
+      "place": "San Andrés Huista (Jacaltenango), Huehuetenango",
+      "latitude": 15.7243708,
+      "longitude": -91.7335827,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13040": {
+      "place": "Chalum (La Libertad), Huehuetenango",
+      "latitude": 15.5944243,
+      "longitude": -91.9537425,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13041": {
+      "place": "La Mesilla, Huehuetenango",
+      "latitude": 15.6406255,
+      "longitude": -91.9807734,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "14001": {
+      "place": "Santa Cruz del Quiché, Quiché",
+      "latitude": 15.0295098,
+      "longitude": -91.1496179,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "14002": {
+      "place": "Quiché, Quiché",
+      "latitude": 15.0295098,
+      "longitude": -91.1496179,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "14003": {
+      "place": "Chinique, Quiché",
+      "latitude": 15.0407263,
+      "longitude": -91.0266104,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "14004": {
+      "place": "Zacualpa, Quiché",
+      "latitude": 15.0266233,
+      "longitude": -90.8770542,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "14005": {
+      "place": "Chajul, Quiché",
+      "latitude": 15.4849204,
+      "longitude": -91.0364217,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "14006": {
+      "place": "Chichicastenango, Quiché",
+      "latitude": 14.9428673,
+      "longitude": -91.1116613,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "14007": {
+      "place": "Patzité, Quiché",
+      "latitude": 14.9639554,
+      "longitude": -91.2081685,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "14008": {
+      "place": "San Antonio Ilotenango, Quiché",
+      "latitude": 15.0555076,
+      "longitude": -91.2290681,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "14009": {
+      "place": "San Pedro Jocopilas, Quiché",
+      "latitude": 15.0948694,
+      "longitude": -91.15026,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "14010": {
+      "place": "Cunén, Quiché",
+      "latitude": 15.3375215,
+      "longitude": -91.0273502,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
     }
   }
 }
