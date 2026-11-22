@@ -1,0 +1,56 @@
+{
+  "name": "supermarket-scrapper-desktop",
+  "productName": "Supermarket Scrapper",
+  "version": "1.0.0",
+  "description": "Comparador de precios de supermercados de Guatemala",
+  "main": "main.js",
+  "scripts": {
+    "start": "node scripts/build.js frontend && electron .",
+    "start:fast": "electron .",
+    "build:frontend": "node scripts/build.js frontend",
+    "build:backend": "node scripts/build.js backend",
+    "dist": "node scripts/build.js all && electron-builder"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "electron": "^45.4.1",
+    "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "gt.supermarket.scrapper",
+    "productName": "Supermarket Scrapper",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "loading.html",
+      "renderer/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "dist-backend/supermarket-backend",
+        "to": "backend"
+      }
+    ],
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Utility"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

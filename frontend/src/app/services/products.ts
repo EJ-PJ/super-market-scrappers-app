@@ -3,9 +3,17 @@ import { inject, Service } from '@angular/core';
 import { map } from 'rxjs';
 import { SearchResponse, Store } from '../../models/products';
 
+declare global {
+  interface Window {
+    // set by the Electron preload (desktop/preload.js) with the port the backend got
+    desktop?: { apiUrl: string | null };
+  }
+}
+
 // Full URL (not '/api/v1' + proxy): the proxy only exists in "ng serve",
-// Electron loads the app from file:// and needs the real backend address
-export const API_URL = 'http://127.0.0.1:5000/api/v1';
+// Electron loads the app from file:// and needs the real backend address.
+// In the desktop app the backend runs on a free port, outside of it on 5000
+export const API_URL = window.desktop?.apiUrl ?? 'http://127.0.0.1:5000/api/v1';
 
 @Service()
 export class Products {

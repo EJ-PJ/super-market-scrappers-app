@@ -30,6 +30,8 @@ MANIFEST
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
+# PyInstaller config of the desktop app
+!supermarket-backend.spec
 
 # Installer logs
 pip-log.txt
