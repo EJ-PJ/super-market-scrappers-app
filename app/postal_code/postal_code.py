@@ -3,6 +3,26 @@ import unicodedata
 from pathlib import Path
 
 POSTAL_CODE_FILE = Path(__file__).parent / "postal_code.json"
+# also has the coordinates of every postal code (made by scripts/build_super_fresh_stores.py)
+SUPER_FRESH_STORES_FILE = Path(__file__).parent / "super_fresh_stores.json"
+
+_coords_cache: dict | None = None
+
+
+def get_postal_code_coords(postal_code: str) -> dict | None:
+    # {"latitude", "longitude"} of the zone / municipality, None if unknown
+    global _coords_cache
+    if _coords_cache is None:
+        try:
+            data = json.loads(SUPER_FRESH_STORES_FILE.read_text(encoding="utf-8"))
+            _coords_cache = data.get("postal_codes", {})
+        except FileNotFoundError:
+            _coords_cache = {}
+
+    entry = _coords_cache.get(postal_code) or {}
+    if entry.get("latitude") is None or entry.get("longitude") is None:
+        return None
+    return {"latitude": entry["latitude"], "longitude": entry["longitude"]}
 
 
 def _normalize(text: str) -> str: # Lowercase and remove accents so "Sacatepéquez" matches "sacatepequez"
@@ -17,6 +37,10 @@ def _get_key(data: dict, name: str):
         if _normalize(key) == normalized_name:
             return key
     return None
+
+
+def _display_name(key: str) -> str: # "El_Progreso" -> "El Progreso"
+    return key.replace("_", " ")
 
 
 class PostalCode():
@@ -55,6 +79,40 @@ class PostalCode():
         self.postal_code = result
 
         return result
+
+    def list_locations(self) -> list[dict]:
+        # Full tree for the frontend selects: department -> municipality -> area (zone).
+        # "name" is for display ("El Progreso"), "key" is the original json key ("El_Progreso").
+        # Municipalities split by zones have postal_code None and their codes in "areas".
+        with open(POSTAL_CODE_FILE, encoding="utf-8") as file:
+            postal_codes = json.load(file)
+
+        locations = []
+        for department_key, municipalities in postal_codes.items():
+            municipality_list = []
+            for municipality_key, value in municipalities.items():
+                municipality = {
+                    "key": municipality_key,
+                    "name": _display_name(municipality_key),
+                    "postal_code": None,
+                    "areas": [],
+                }
+                if isinstance(value, dict):
+                    municipality["areas"] = [
+                        {"key": area_key, "name": _display_name(area_key), "postal_code": code}
+                        for area_key, code in value.items()
+                    ]
+                else:
+                    municipality["postal_code"] = value
+                municipality_list.append(municipality)
+
+            locations.append({
+                "key": department_key,
+                "name": _display_name(department_key),
+                "municipalities": municipality_list,
+            })
+
+        return locations
 
 """ 
 def main():

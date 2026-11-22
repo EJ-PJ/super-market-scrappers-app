@@ -1,26 +1,18 @@
 from app.clients.maxi_despensa_client import MaxiDespensaClient
 from app.parser.maxi_despensa_product_parser import MaxiDespensaScrapperProduct
 
+
 class MaxiDespensaScrapper:
 
-    # Constructor
-    def __init__(self):
-        
-        self.product_maxi_despensa = None
-        self.parse_products_maxi_despensa = None
+    def search_products(self, product: str, page: int, page_size: int, postal_code: str | None = None) -> list[dict]:
+        # VTEX uses from / to indexes and "to" is inclusive (from=0, to=19 -> 20 products)
+        from_index = (page - 1) * page_size
+        to_index = from_index + page_size - 1
 
-    def search_products(self, product,  from_page, to_page):
-        maxi_despensa_client = MaxiDespensaClient() 
+        raw_products = MaxiDespensaClient().search_products(product, from_index, to_index, postal_code)
 
-        # Search products
-        self.product_maxi_despensa = maxi_despensa_client.search_products(product, from_page, to_page)
+        return MaxiDespensaScrapperProduct().product_parser(raw_products)
 
-        # print("type maxi_despensa ", type(self.product_maxi_despensa).__name__)        
-
-        # Parser products
-        maxi_despensa_p_p = MaxiDespensaScrapperProduct()
-        self.parse_products_maxi_despensa = maxi_despensa_p_p.product_parser(self.product_maxi_despensa)
-
-        # print("parse products: ", self.parse_products_maxi_despensa)
-
-        return self.parse_products_maxi_despensa
+    def get_branch(self, postal_code: str | None = None) -> dict | None:
+        # name / address of the store used for this postal code
+        return MaxiDespensaClient().get_branch(postal_code)

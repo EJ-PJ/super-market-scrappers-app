@@ -1,1 +1,1 @@
-from .product_service import  Products
+from .product_service import Products, STORES

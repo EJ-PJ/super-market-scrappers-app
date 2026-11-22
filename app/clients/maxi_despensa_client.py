@@ -1,12 +1,31 @@
 import json
-from .base_client import BaseClient
+
+import requests
+
+from .base_client import BaseClient, InvalidPostalCode, NoStoreForPostalCode, encode_vtex_segment
+from app.postal_code import get_postal_code_coords
 from app.parser.maxi_despensa_search_product_parser import ParserMaxiDespensa
 
 
 class MaxiDespensaClient:
 
-    # https://msf-api.gta.com.gt/api/products/search
-    base_url = "https://www.maxidespensa.com.gt/_v/segment/graphql/v1"
+    host = "https://www.maxidespensa.com.gt"
+    base_url = f"{host}/_v/segment/graphql/v1"
+    # postal code -> region and store (seller)
+    regions_url = f"{host}/api/checkout/pub/regions"
+    # pickup points near some coordinates, they have the store address
+    pickup_points_url = f"{host}/api/checkout/pub/pickup-points"
+
+    # VTEX sales channel of Maxi Despensa ("sc" param)
+    sales_channel = 3
+    # the regions endpoint also returns "walmartgtwm99995" (WM Interior Bodega),
+    # the Maxi Despensa store is the one that starts with this
+    seller_prefix = "walmartgtbo"
+
+    # postal code -> {"region_id", "seller"}, shared between requests
+    _region_cache: dict = {}
+    # postal code -> {"name", "address", "distance_km"}
+    _branch_cache: dict = {}
 
     querystring = {"workspace":"master","maxAge":"short","appsEtag":"remove",
                    "domain":"store","locale":"es-GT","operationName":"productSearchV3",
@@ -19,7 +38,20 @@ class MaxiDespensaClient:
     # search variables, sent base64 encoded in extensions["variables"]
     search_variables = "{\"skusFilter\":\"ALL\",\"simulationBehavior\":\"default\",\"installmentCriteria\":\"MAX_WITHOUT_INTEREST\",\"productOriginVtex\":false,\"map\":\"ft\",\"query\":\"monster\",\"orderBy\":\"OrderByScoreDESC\",\"from\":0,\"to\":20,\"selectedFacets\":[{\"key\":\"ft\",\"value\":\"monster\"}],\"fullText\":\"monster\",\"facetsBehavior\":\"Static\",\"categoryTreeBehavior\":\"default\",\"withFacets\":false,\"variant\":\"6aa0509f2b0a579f8beb02ac-variantNull\"}"
 
-    def search_products(self, product, from_page, to_page):
+    headers = {
+        "Accept": "*/*",
+        "Accept-Encoding": "gzip, deflate, br, zstd",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Connection": "keep-alive",
+        "content-type": "application/json",
+        "Referer": "https://www.maxidespensa.com.gt/",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-origin",
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:153.0) Gecko/20100101 Firefox/153.0"
+    }
+
+    def search_products(self, product, from_page, to_page, postal_code=None):
 
         maxi_parser = ParserMaxiDespensa()
 
@@ -32,24 +64,86 @@ class MaxiDespensaClient:
             "variables": encode_base64_json
         })
 
+        # without postal code Maxi Despensa returns its default prices
+        cookies = {}
+        if postal_code:
+            region = self.get_region(postal_code)
+            cookies["vtex_segment"] = encode_vtex_segment(self.sales_channel, region["region_id"], region["seller"])
+
         base_client = BaseClient()
 
         response = base_client.get(
             self.base_url,
-            headers={
-                "Accept": "*/*",
-                "Accept-Encoding": "gzip, deflate, br, zstd",
-                "Accept-Language": "en-US,en;q=0.9",
-                "Connection": "keep-alive",
-                "content-type": "application/json",
-                "Cookie": "_fbp=fb.2.1789671262704.754565879863158403.AQYCAQIB; vtex-search-anonymous=6cb1f5f9673e4e0d90848437821c6bdb; checkout.vtex.com=__ofid=544d8c19abaa4a4ea66447d635a3d973; CheckoutOrderFormOwnership=0buoTLo9pREI%2BfyqkkFsqsxKxdwvlhellUSEF7oZZlncKFtGMvuv6o%2B4zv7STxTC8wQyH5oVbA%2FCoBIoljlpS%2FFF6wR4pYDtPpjpMtOiudDT3GZwXc%2Bs7dSX5PkSFgPxbujO3kmcJ9afwUG9yTvXw4SLIdSybU%2FlMHtOFc2cQUwGrpchkoZB38M%2F80RzGJ%2BHhEONBgYlrUxdasKX39tP2CQAvObaDjbk%2FbIv%2FOtV5H7DLproiNuP1PF555%2BYHmNNY8ZF7cENPslUTXqu3S3ZdxRKmoS189ArcE2fXPzsd%2FQZz35YxWLdmL8oEiIopjSWTVQKUw5lwgikClyty3et9vohyVKkURjTtQn0fdufq0qB9f1u94WDNhEptL%2B3foi3PTJikb%2BcYMAUFFgu0KOXvw%3D%3D; vtex_binding_address=bodegagt.myvtex.com/; VtexWorkspace=master%3A-; vtex_session=eyJhbGciOiJFUzI1NiIsImtpZCI6IjdhN2U4ZDdmLWNjNGQtNDY1OS1hNTMyLWRjYmIwZGJiZDVkYiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50LmlkIjpbXSwiaWQiOiIyNjhmZmI5OC1lOTU5LTRmYmItOWQ3My01YjNkMWVhN2IwNzMiLCJ2ZXJzaW9uIjozLCJzdWIiOiJzZXNzaW9uIiwiYWNjb3VudCI6ImJvZGVnYWd0IiwiZXhwIjoxNzkxNDA0MDkxLCJpYXQiOjE3OTA5NzIwOTEsImp0aSI6IjE4NjljNWIxLWY4MzItNDJkZC1hMzhhLTU0ZWRlZWNmZTQxMyIsImlzcyI6InNlc3Npb24vZGF0YS1zaWduZXIifQ.yapHFjnjPNXtcVn4cSgEMmuMxvjJ1DZozsJuIH2HzwZ3h5T6qx6le0meDfIjxNMdUWwoVxByFfiKZrWs0WG0Fw; vtex_segment=eyJjYW1wYWlnbnMiOm51bGwsImNoYW5uZWwiOiIzIiwicHJpY2VUYWJsZXMiOm51bGwsInJlZ2lvbklkIjoiVTFjamQyRnNiV0Z5ZEdkMFltODBPVEk9IiwidXRtX2NhbXBhaWduIjpudWxsLCJ1dG1fc291cmNlIjpudWxsLCJ1dG1pX2NhbXBhaWduIjpudWxsLCJjdXJyZW5jeUNvZGUiOiJHVFEiLCJjdXJyZW5jeVN5bWJvbCI6IlEiLCJjb3VudHJ5Q29kZSI6IkdUTSIsImN1bHR1cmVJbmZvIjoiZXMtR1QiLCJjaGFubmVsUHJpdmFjeSI6InB1YmxpYyIsImZhY2V0cyI6ImFjY2Vzc2NvbnRyb2xsaXN0PXdhbG1hcnRndGJvNDkyOyJ9; vtex-search-session=cb7bdce9387d4251a9402182a38fc9d7; sp-variant=6aa0509f2b0a579f8beb02ac-variantNull; CheckoutLocale=es-GT",
-                "Referer": "https://www.maxidespensa.com.gt/monster?_q=monster&map=ft",
-                "Sec-Fetch-Dest": "empty",
-                "Sec-Fetch-Mode": "cors",
-                "Sec-Fetch-Site": "same-origin",
-                "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:153.0) Gecko/20100101 Firefox/153.0"
-            },
-            params=querystring
+            headers=self.headers,
+            params=querystring,
+            cookies=cookies,
         )
 
         return response.json()
+
+    def get_region(self, postal_code):
+        if postal_code in self._region_cache:
+            return self._region_cache[postal_code]
+
+        try:
+            response = BaseClient().get(
+                self.regions_url,
+                headers=self.headers,
+                params={"country": "GTM", "sc": self.sales_channel, "postalCode": postal_code},
+            )
+        except requests.HTTPError as error:
+            # 400 = ORD006 "codigo postal no válido"
+            if error.response is not None and error.response.status_code == 400:
+                raise InvalidPostalCode(postal_code) from error
+            raise
+
+        regions = response.json()
+        sellers = {seller["id"]: seller.get("name") for seller in (regions[0].get("sellers") or [])} if regions else {}
+        if not sellers:
+            raise NoStoreForPostalCode(postal_code)
+
+        # only the store's own branches: other sellers are marketplace vendors
+        # (e.g. Walmart in Huehuetenango only has "Andreiso store")
+        seller = next((s for s in sellers if s.startswith(self.seller_prefix)), None)
+        if seller is None:
+            raise NoStoreForPostalCode(postal_code)
+        region = {"region_id": regions[0]["id"], "seller": seller, "seller_name": sellers[seller] or seller}
+
+        self._region_cache[postal_code] = region
+        return region
+
+    def get_branch(self, postal_code):
+        # store (branch) used for this postal code: name, address and distance to the zone.
+        # None without postal code (the store uses its default prices)
+        if not postal_code:
+            return None
+        if postal_code in self._branch_cache:
+            return self._branch_cache[postal_code]
+
+        region = self.get_region(postal_code)
+        branch = {"name": self.branch_name(region), "address": None, "distance_km": None}
+
+        # the pickup points near the zone have the address, their id starts with the seller
+        coords = get_postal_code_coords(postal_code)
+        if coords:
+            response = BaseClient().get(
+                self.pickup_points_url,
+                headers=self.headers,
+                params={"geoCoordinates": f"{coords['longitude']};{coords['latitude']}", "sc": self.sales_channel},
+            )
+            for item in response.json().get("items") or []:
+                point = item.get("pickupPoint") or {}
+                if not str(point.get("id", "")).startswith(region["seller"] + "_"):
+                    continue
+                address = point.get("address") or {}
+                branch["name"] = point.get("friendlyName") or branch["name"]
+                branch["address"] = ", ".join(p for p in (address.get("street"), address.get("city")) if p) or None
+                if item.get("distance") is not None:
+                    branch["distance_km"] = round(item["distance"], 1)
+                break
+
+        self._branch_cache[postal_code] = branch
+        return branch
+
+    def branch_name(self, region):
+        return region["seller_name"]

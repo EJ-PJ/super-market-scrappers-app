@@ -1,53 +1,36 @@
+from app.models import make_product, safe_get
+
+STORE = "super_fresh"
+
+
 class SuperFreshScrapperProduct:
 
-    def product_parser(self, products : dict):
-        sp_products = {"super_fresh" : {
-                    "products" : []
-                    }
-                }
+    def product_parser(self, products: dict) -> list[dict]:
+        parsed = []
 
-        for product in products['products']:
-            product_desp = {
-                    "description" : "",
-                    "price" : "",
-                    "price_offer": "",
-                    "img" : "",
-                    "offerHighlight": [],
-                    "url" : "",
-                    "category" : {
-                        "name" : "",
-                        "subcategory" : {
-                            "name" : ""
-                        }
-                    }
-			} 
-            # adding description
-            product_desp["description"] = product.get("description")
-            # adding price
-            product_desp['price'] = product.get("price")
-            # adding price_offer
-            product_desp['price_offer'] = product.get("offer", {}).get("price")
-            # adding img
-            product_desp['img'] = product.get("images", [{}])[0].get("url")
-            # adding category name
-            product_desp['category']['name'] = self.safe_get(product, "subcategory", "name") 
-            # adding subcategory name
-            product_desp['category']['subcategory']['name'] = self.safe_get(product, "subcategory", "category", "name") 
-            # adding bar code0
-            bar_code = product.get('barcode')
-            url_p = f"https://www.misuperfresh.com.gt/product/{bar_code}"
-            product_desp['url'] = url_p
+        for product in safe_get(products, "products", default=[]):
+            # "offer" can come as null when the product has no discount
+            offer_price = safe_get(product, "offer", "price")
+            normal_price = product.get("price")
 
-            # adding product
-            sp_products['super_fresh']['products'].append(product_desp)
+            bar_code = product.get("barcode")
 
-        return sp_products
+            brand = product.get("brand")
+            if isinstance(brand, dict):
+                brand = brand.get("name")
 
+            parsed.append(make_product(
+                store=STORE,
+                product_id=bar_code or product.get("id"),
+                name=product.get("description"),
+                brand=brand,
+                price=offer_price if offer_price is not None else normal_price,
+                regular_price=normal_price,
+                image=safe_get(product, "images", 0, "url"),
+                url=f"https://www.misuperfresh.com.gt/product/{bar_code}" if bar_code else None,
+                # Super Fresh only has two levels: subcategory -> category
+                category=safe_get(product, "subcategory", "category", "name"),
+                subcategory=safe_get(product, "subcategory", "name"),
+            ))
 
-    def safe_get(self, data, *keys, default=None):
-        for key in keys:
-            try:
-                data = data[key]
-            except (KeyError, IndexError, TypeError):
-                return default
-        return data
+        return parsed
