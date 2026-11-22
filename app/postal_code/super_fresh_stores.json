@@ -2680,6 +2680,206 @@
       "approximate": false,
       "store": 230,
       "distance_km": 4.2
+    },
+    "13002": {
+      "place": "Chiantla, Huehuetenango",
+      "latitude": 15.3550253,
+      "longitude": -91.4577734,
+      "approximate": false,
+      "store": 230,
+      "distance_km": 7.2
+    },
+    "13003": {
+      "place": "Malacancito, Huehuetenango",
+      "latitude": null,
+      "longitude": null,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13004": {
+      "place": "Cuilco, Huehuetenango",
+      "latitude": 15.407495,
+      "longitude": -91.946828,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13005": {
+      "place": "Nentón, Huehuetenango",
+      "latitude": 15.8008963,
+      "longitude": -91.7549218,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13006": {
+      "place": "San Pedro Necta, Huehuetenango",
+      "latitude": 15.491665,
+      "longitude": -91.765766,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13007": {
+      "place": "Jacaltenango, Huehuetenango",
+      "latitude": 15.666336,
+      "longitude": -91.7109686,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13008": {
+      "place": "Soloma, Huehuetenango",
+      "latitude": 15.658151,
+      "longitude": -91.4301437,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13009": {
+      "place": "Ixtahuacán, Huehuetenango",
+      "latitude": 15.4171667,
+      "longitude": -91.7692407,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13010": {
+      "place": "Santa Bárbara, Huehuetenango",
+      "latitude": 15.3157185,
+      "longitude": -91.6337905,
+      "approximate": false,
+      "store": 230,
+      "distance_km": 13.1
+    },
+    "13011": {
+      "place": "La Libertad, Huehuetenango",
+      "latitude": 15.51386,
+      "longitude": -91.869447,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13012": {
+      "place": "La Democracia, Huehuetenango",
+      "latitude": 15.625477,
+      "longitude": -91.886868,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13013": {
+      "place": "San Miguel Acatán, Huehuetenango",
+      "latitude": 15.7039981,
+      "longitude": -91.5977242,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13014": {
+      "place": "San Rafael La Independencia, Huehuetenango",
+      "latitude": 15.7024382,
+      "longitude": -91.5347829,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13015": {
+      "place": "Todos Santos Cuchumatán, Huehuetenango",
+      "latitude": 15.5092795,
+      "longitude": -91.6038654,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13016": {
+      "place": "San Juan Atitán, Huehuetenango",
+      "latitude": 15.4421808,
+      "longitude": -91.6342662,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13017": {
+      "place": "Santa Eulalia, Huehuetenango",
+      "latitude": 15.7329506,
+      "longitude": -91.4582368,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13018": {
+      "place": "San Mateo Ixtatán, Huehuetenango",
+      "latitude": 15.8305484,
+      "longitude": -91.4764686,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13019": {
+      "place": "Colotenango, Huehuetenango",
+      "latitude": 15.40533,
+      "longitude": -91.713994,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13020": {
+      "place": "San Sebastián Huehuetenango, Huehuetenango",
+      "latitude": 15.3880046,
+      "longitude": -91.6151363,
+      "approximate": false,
+      "store": 230,
+      "distance_km": 13.7
+    },
+    "13021": {
+      "place": "Tectitán, Huehuetenango",
+      "latitude": 15.3071265,
+      "longitude": -92.0603682,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13022": {
+      "place": "Concepción, Huehuetenango",
+      "latitude": 15.6243003,
+      "longitude": -91.6655529,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13023": {
+      "place": "San Juan Ixcoy, Huehuetenango",
+      "latitude": 15.5999144,
+      "longitude": -91.4467941,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13024": {
+      "place": "San Antonio Huista, Huehuetenango",
+      "latitude": 15.6501683,
+      "longitude": -91.7716989,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13025": {
+      "place": "San Sebastián Coatán, Huehuetenango",
+      "latitude": 15.7361794,
+      "longitude": -91.5633025,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
+    },
+    "13026": {
+      "place": "Barillas, Huehuetenango",
+      "latitude": 15.8043835,
+      "longitude": -91.3154525,
+      "approximate": false,
+      "store": null,
+      "distance_km": null
     }
   }
 }
