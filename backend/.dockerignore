@@ -18,6 +18,6 @@ requests
 notes.txt
 Dockerfile
 docker-compose.yml
-Caddyfile
 .dockerignore
 .gitignore
+nginx.conf
