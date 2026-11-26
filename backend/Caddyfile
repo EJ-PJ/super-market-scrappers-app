@@ -1,0 +1,17 @@
+# HTTPS reverse proxy for the API. Port 80 of the VPS is used by the other project,
+# so the certificate is requested with the TLS-ALPN challenge (port 443 only)
+{
+	email {$ACME_EMAIL}
+	auto_https disable_redirects
+}
+
+{$API_DOMAIN} {
+	tls {
+		issuer acme {
+			disable_http_challenge
+		}
+	}
+
+	encode gzip
+	reverse_proxy backend:8000
+}

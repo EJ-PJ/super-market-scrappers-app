@@ -1,0 +1,23 @@
+# secrets: FLASK_KEY comes from the env file of docker compose
+.env
+**/.env
+.env.*
+!.env.example
+
+**/__pycache__
+**/*.py[cod]
+.venv
+venv
+build
+dist
+*.spec
+scripts
+app/parser/test.py
+test
+requests
+notes.txt
+Dockerfile
+docker-compose.yml
+Caddyfile
+.dockerignore
+.gitignore

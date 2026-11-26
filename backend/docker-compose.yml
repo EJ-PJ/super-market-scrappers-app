@@ -1,0 +1,27 @@
+services:
+  backend:
+    build: .
+    image: supermarket-scrapper-backend:latest
+    restart: unless-stopped
+    env_file: .env.production
+    # not published: only Caddy reaches it on the internal network
+    expose:
+      - "8000"
+    mem_limit: 1g
+
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    depends_on:
+      - backend
+    env_file: .env.production
+    ports:
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

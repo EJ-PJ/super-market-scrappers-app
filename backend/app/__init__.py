@@ -15,6 +15,9 @@ CORS_ORIGINS = [
 # Load environment variables from the .env file
 load_dotenv()
 
+# Production frontend (Vercel), e.g. CORS_ORIGINS=https://my-app.vercel.app,https://my-domain.com
+CORS_ORIGINS += [o.strip().rstrip("/") for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()]
+
 flask_key = os.getenv("FLASK_KEY")
 
 
