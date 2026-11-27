@@ -10,6 +10,9 @@ A desktop app to **compare supermarket prices in Guatemala**. Search a product o
 | La Torre | latorre.com.gt | ✅ (same prices in every branch, no addresses) |
 | Super Fresh | misuperfresh.com.gt | ✅ (closest store, see [Super Fresh stores](#super-fresh-stores)) |
 
+- Give it a try whit: https://super-market-app-gt.surge.sh/#/
+
+
 ## Features
 
 - **One search, five stores.** The stores are searched in parallel. If a store is down or has no branch in your zone, the other stores still show their results and that store shows a warning.
@@ -19,6 +22,7 @@ A desktop app to **compare supermarket prices in Guatemala**. Search a product o
 - **Sorting.** By relevance, price (low to high, high to low) or biggest discount.
 - **Product cards.** Image, store, brand, current price, regular price with the discount percentage, promotions (e.g. *2 x Q20*) and a link to the product in the store website.
 - **Desktop app.** Electron app for Linux (AppImage) and Windows (installer). It includes the backend, so Python is not needed to use it.
+
 
 ## How it works
 
