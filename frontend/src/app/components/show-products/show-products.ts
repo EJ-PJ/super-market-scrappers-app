@@ -7,6 +7,8 @@ import { combineLatest, Subscription } from 'rxjs';
 import { Products } from '../../services/products';
 import { Location } from '../../services/location';
 import { LocationPicker } from '../location-picker/location-picker';
+import { ProductCompare } from '../product-compare/product-compare';
+import { Compare, MAX_COMPARE } from '../../services/compare';
 import { Product, StoreStatus } from '../../../models/products';
 
 type SortOption = 'relevance' | 'price-asc' | 'price-desc' | 'discount';
@@ -45,13 +47,15 @@ function productGroup(product: Product): ProductGroup {
 const PAGE_SIZE = 20;
 
 @Component({
-  imports: [CurrencyPipe, FormsModule, LocationPicker],
+  imports: [CurrencyPipe, FormsModule, LocationPicker, ProductCompare],
   selector: 'app-show-products',
   templateUrl: './show-products.html',
 })
 export class ShowProducts {
   private productsService = inject(Products);
   location = inject(Location);
+  compare = inject(Compare);
+  readonly maxCompare = MAX_COMPARE;
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
@@ -202,6 +206,21 @@ export class ShowProducts {
       window.open(product.url, '_blank', 'noopener');
     }
   }
+
+  // "Comparar" checkbox of a product card
+  toggleCompare(product: Product) {
+    const store = this.stores().find((s) => s.id === product.store);
+    this.compare.toggle({
+      product,
+      storeName: store?.name ?? product.store,
+      branch: store?.branch ?? null,
+    });
+  }
+
+  // empty slots of the compare bar
+  compareSlots = computed(() =>
+    Array.from({ length: MAX_COMPARE - this.compare.items().length }, (_, i) => i),
+  );
 
   toggleStore(storeId: string) {
     this.hiddenStores.update((ids) =>

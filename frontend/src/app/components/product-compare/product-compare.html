@@ -1,0 +1,204 @@
+<div
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="compare-title"
+  class="fixed inset-0 z-30 flex flex-col bg-white">
+  <header class="flex items-center justify-between gap-3 border-b border-gray-200 px-4 py-3">
+    <h2 id="compare-title" class="text-lg font-semibold text-gray-800">
+      Comparar productos ({{ compare.items().length }})
+    </h2>
+    <div class="flex items-center gap-2">
+      <button
+        type="button"
+        (click)="compare.clear()"
+        class="rounded-lg px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100">
+        Limpiar todo
+      </button>
+      <button
+        type="button"
+        (click)="compare.open.set(false)"
+        class="rounded-lg px-3 py-1.5 text-sm text-white bg-teal-600 hover:bg-teal-700">
+        <i class="fa-solid fa-xmark mr-1" aria-hidden="true"></i>Cerrar
+      </button>
+    </div>
+  </header>
+
+  <div class="flex-1 overflow-auto">
+    <table class="min-w-full table-fixed border-collapse text-sm">
+      <colgroup>
+        <col class="w-32 sm:w-40">
+        @for (item of compare.items(); track item.product.id) {
+          <col class="w-56 sm:w-72">
+        }
+      </colgroup>
+
+      <!-- Product cards -->
+      <thead>
+        <tr class="align-top">
+          <th scope="row" class="sticky left-0 z-[1] bg-gray-50 border-b border-r border-gray-200 px-3 py-3 text-left font-normal text-gray-600">
+            Productos
+          </th>
+          @for (item of compare.items(); track item.product.id) {
+            @let product = item.product;
+            <td class="relative border-b border-r border-gray-200 px-4 pt-8 pb-4">
+              <button
+                type="button"
+                (click)="compare.remove(product.id)"
+                [attr.aria-label]="'Quitar ' + product.name + ' de la comparación'"
+                class="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-gray-500 text-xs text-white hover:bg-gray-700">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+              </button>
+              @if (isBest(product)) {
+                <span class="absolute top-2 left-3 rounded-full bg-green-600 px-2 py-0.5 text-xs font-semibold text-white">
+                  Más barato
+                </span>
+              }
+
+              <div class="aspect-square max-h-44 mx-auto mb-3 flex items-center justify-center overflow-hidden">
+                @if (product.image) {
+                  <img [src]="product.image" [alt]="product.name" class="max-h-full max-w-full object-contain">
+                } @else {
+                  <span class="text-xs text-gray-400">Sin imagen</span>
+                }
+              </div>
+
+              <p class="text-sm font-medium text-gray-800 line-clamp-3 min-h-[3.75rem]" [title]="product.name">
+                {{ product.name }}
+              </p>
+
+              <div class="mt-2">
+                @if (product.available && product.price != null) {
+                  @if (product.discount_percent > 0) {
+                    <span class="rounded bg-red-600 px-1.5 py-0.5 text-xs font-semibold text-white">
+                      -{{ product.discount_percent }}%
+                    </span>
+                  }
+                  <p class="text-xl font-bold" [class.text-green-700]="isBest(product)" [class.text-gray-900]="!isBest(product)">
+                    {{ product.price | currency: product.currency : 'symbol-narrow' }}
+                    @if (product.regular_price && product.regular_price > product.price) {
+                      <span class="ml-1 text-xs font-normal text-gray-400 line-through">
+                        {{ product.regular_price | currency: product.currency : 'symbol-narrow' }}
+                      </span>
+                    }
+                  </p>
+                } @else {
+                  <p class="text-sm font-semibold text-red-600">No disponible</p>
+                }
+              </div>
+
+              @if (product.url) {
+                <button
+                  type="button"
+                  (click)="visit.emit(product)"
+                  class="mt-3 w-full rounded-lg border border-teal-600 py-1.5 text-sm text-teal-700 hover:bg-teal-50">
+                  Ver en tienda
+                </button>
+              }
+            </td>
+          }
+        </tr>
+      </thead>
+
+      <!-- Basic info rows -->
+      <tbody class="[&_tr:nth-child(odd)_td]:bg-amber-50/60">
+        <tr>
+          <th scope="row" class="sticky left-0 bg-gray-50 border-b border-r border-gray-200 px-3 py-2 text-left font-normal text-gray-600">Tienda</th>
+          @for (item of compare.items(); track item.product.id) {
+            <td class="border-b border-r border-gray-200 px-4 py-2 font-medium text-teal-700">{{ item.storeName }}</td>
+          }
+        </tr>
+        <tr>
+          <th scope="row" class="sticky left-0 bg-gray-50 border-b border-r border-gray-200 px-3 py-2 text-left font-normal text-gray-600">Precio</th>
+          @for (item of compare.items(); track item.product.id) {
+            @let product = item.product;
+            <td class="border-b border-r border-gray-200 px-4 py-2">
+              @if (product.available && product.price != null) {
+                {{ product.price | currency: product.currency : 'symbol-narrow' }}
+                @if (difference(product); as diff) {
+                  <span class="text-xs text-red-600">(+{{ diff | currency: product.currency : 'symbol-narrow' }})</span>
+                }
+              } @else {
+                —
+              }
+            </td>
+          }
+        </tr>
+        <tr>
+          <th scope="row" class="sticky left-0 bg-gray-50 border-b border-r border-gray-200 px-3 py-2 text-left font-normal text-gray-600">Precio regular</th>
+          @for (item of compare.items(); track item.product.id) {
+            @let product = item.product;
+            <td class="border-b border-r border-gray-200 px-4 py-2">
+              {{ product.regular_price != null ? (product.regular_price | currency: product.currency : 'symbol-narrow') : '—' }}
+            </td>
+          }
+        </tr>
+        <tr>
+          <th scope="row" class="sticky left-0 bg-gray-50 border-b border-r border-gray-200 px-3 py-2 text-left font-normal text-gray-600">Descuento</th>
+          @for (item of compare.items(); track item.product.id) {
+            @let product = item.product;
+            <td class="border-b border-r border-gray-200 px-4 py-2">
+              @if (savings(product); as saved) {
+                {{ product.discount_percent }}%
+                <span class="text-xs text-green-700">(ahorras {{ saved | currency: product.currency : 'symbol-narrow' }})</span>
+              } @else {
+                —
+              }
+            </td>
+          }
+        </tr>
+        <tr>
+          <th scope="row" class="sticky left-0 bg-gray-50 border-b border-r border-gray-200 px-3 py-2 text-left font-normal text-gray-600">Promociones</th>
+          @for (item of compare.items(); track item.product.id) {
+            <td class="border-b border-r border-gray-200 px-4 py-2">
+              @for (promo of item.product.promotions; track $index) {
+                <span class="mr-1 mb-1 inline-block rounded bg-amber-100 px-1.5 py-0.5 text-[11px] text-amber-800">{{ promo.label }}</span>
+              } @empty {
+                —
+              }
+            </td>
+          }
+        </tr>
+        <tr>
+          <th scope="row" class="sticky left-0 bg-gray-50 border-b border-r border-gray-200 px-3 py-2 text-left font-normal text-gray-600">Disponible</th>
+          @for (item of compare.items(); track item.product.id) {
+            <td class="border-b border-r border-gray-200 px-4 py-2">
+              @if (item.product.available) {
+                <span class="text-green-700"><i class="fa-solid fa-check mr-1" aria-hidden="true"></i>Sí</span>
+              } @else {
+                <span class="text-red-600"><i class="fa-solid fa-xmark mr-1" aria-hidden="true"></i>No</span>
+              }
+            </td>
+          }
+        </tr>
+        <tr>
+          <th scope="row" class="sticky left-0 bg-gray-50 border-b border-r border-gray-200 px-3 py-2 text-left font-normal text-gray-600">Marca</th>
+          @for (item of compare.items(); track item.product.id) {
+            <td class="border-b border-r border-gray-200 px-4 py-2 uppercase">{{ item.product.brand ?? '—' }}</td>
+          }
+        </tr>
+        <tr>
+          <th scope="row" class="sticky left-0 bg-gray-50 border-b border-r border-gray-200 px-3 py-2 text-left font-normal text-gray-600">Categoría</th>
+          @for (item of compare.items(); track item.product.id) {
+            <td class="border-b border-r border-gray-200 px-4 py-2">{{ categoryPath(item.product) ?? '—' }}</td>
+          }
+        </tr>
+        <tr>
+          <th scope="row" class="sticky left-0 bg-gray-50 border-b border-r border-gray-200 px-3 py-2 text-left font-normal text-gray-600">Sucursal</th>
+          @for (item of compare.items(); track item.product.id) {
+            <td class="border-b border-r border-gray-200 px-4 py-2">
+              @if (item.branch; as branch) {
+                <p>{{ branch.name ?? '—' }}</p>
+                <p class="text-xs text-gray-500">{{ branch.address ?? 'Dirección no disponible' }}</p>
+                @if (branch.distance_km != null) {
+                  <p class="text-xs text-gray-400">a {{ branch.distance_km }} km</p>
+                }
+              } @else {
+                <span class="text-gray-500">Sucursal por defecto</span>
+              }
+            </td>
+          }
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

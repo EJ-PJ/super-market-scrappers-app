@@ -1,4 +1,5 @@
 <div class="min-h-screen bg-gray-50">
+
   <!-- Header: back + search bar -->
   <header class="sticky top-0 z-10 bg-white border-b border-gray-200">
     <div class="max-w-screen-2xl mx-auto px-4 py-3 flex items-center gap-3">
@@ -31,8 +32,9 @@
       </div>
     }
   </header>
+  <!-- _Finish Header_ -->
 
-  <main class="max-w-screen-2xl mx-auto px-4 py-6">
+  <main class="max-w-screen-2xl mx-auto px-4 py-6" [class.pb-40]="compare.items().length">
     @if (!query()) {
       <p class="text-center text-gray-500 py-16">Escribe un producto para buscar.</p>
     } @else {
@@ -158,6 +160,29 @@
                       -{{ product.discount_percent }}%
                     </span>
                   }
+
+                  <!-- Pick for the comparator -->
+                  @let inCompare = compare.ids().includes(product.id);
+                  <label
+                    class="absolute top-2 right-2 z-[1] flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs
+                    shadow-sm select-none"
+                    [class.bg-teal-600]="inCompare"
+                    [class.border-teal-600]="inCompare"
+                    [class.text-white]="inCompare"
+                    [class.bg-white]="!inCompare"
+                    [class.border-gray-300]="!inCompare"
+                    [class.text-gray-700]="!inCompare"
+                    [class.cursor-pointer]="inCompare || !compare.full()"
+                    [class.opacity-50]="!inCompare && compare.full()"
+                    [title]="!inCompare && compare.full() ? 'Máximo ' + maxCompare + ' productos para comparar' : ''">
+                    <input
+                      type="checkbox"
+                      [checked]="inCompare"
+                      [disabled]="!inCompare && compare.full()"
+                      (change)="toggleCompare(product)"
+                      class="accent-teal-600">
+                    Comparar
+                  </label>
 
                   <div class="aspect-square mb-3 flex items-center justify-center rounded-lg bg-white overflow-hidden">
                     @if (product.image) {
@@ -327,10 +352,74 @@
     }
   </main>
 
+  <!-- Compare bar: products picked with "Comparar" -->
+  @if (compare.items().length && !compare.open()) {
+    <div class="fixed inset-x-0 bottom-0 z-20 border-t border-gray-700 bg-gray-800/95 text-white shadow-2xl">
+      <div class="max-w-screen-2xl mx-auto flex items-center gap-3 px-4 py-3">
+        <div class="flex-1 min-w-0 flex gap-3 overflow-x-auto">
+          @for (item of compare.items(); track item.product.id) {
+            @let product = item.product;
+            <div class="relative flex w-60 shrink-0 items-center gap-3 rounded-lg bg-white p-2 pr-7 text-gray-800">
+              <div class="h-12 w-12 shrink-0 flex items-center justify-center overflow-hidden">
+                @if (product.image) {
+                  <img [src]="product.image" [alt]="product.name" class="max-h-full max-w-full object-contain">
+                }
+              </div>
+              <div class="min-w-0">
+                <p class="text-xs font-medium text-teal-700 truncate">{{ item.storeName }}</p>
+                <p class="text-xs line-clamp-2" [title]="product.name">{{ product.name }}</p>
+                <p class="text-sm font-bold">
+                  @if (product.available && product.price != null) {
+                    {{ product.price | currency: product.currency : 'symbol-narrow' }}
+                  } @else {
+                    <span class="font-normal text-gray-500">No disponible</span>
+                  }
+                </p>
+              </div>
+              <button
+                type="button"
+                (click)="compare.remove(product.id)"
+                [attr.aria-label]="'Quitar ' + product.name + ' de la comparación'"
+                class="absolute top-1 right-1 h-5 w-5 rounded-full text-xs text-gray-500 hover:bg-gray-200">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+              </button>
+            </div>
+          }
+          @for (slot of compareSlots(); track slot) {
+            <div
+              class="hidden sm:flex w-60 shrink-0 items-center justify-center rounded-lg border-2 border-dashed
+              border-gray-500 text-2xl font-semibold text-gray-500">
+              {{ compare.items().length + slot + 1 }}
+            </div>
+          }
+        </div>
+        <div class="flex shrink-0 flex-col items-stretch gap-1">
+          <button
+            type="button"
+            (click)="compare.open.set(true)"
+            [disabled]="compare.items().length < 2"
+            [title]="compare.items().length < 2 ? 'Elige al menos 2 productos' : ''"
+            class="rounded-full px-5 py-1.5 text-sm font-medium bg-teal-500 hover:bg-teal-400
+            disabled:opacity-50 disabled:hover:bg-teal-500">
+            Comparar ({{ compare.items().length }})
+          </button>
+          <button type="button" (click)="compare.clear()" class="text-xs text-gray-300 hover:text-white hover:underline">
+            Limpiar
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Side by side comparator -->
+  @if (compare.open()) {
+    <app-product-compare (visit)="storeWarning.set($event)" />
+  }
+
   <!-- Warning before opening the store site -->
   @if (storeWarning(); as product) {
     <div
-      class="fixed inset-0 z-20 flex items-center justify-center bg-black/40 px-4"
+      class="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4"
       (click)="storeWarning.set(null)">
       <div
         role="dialog"
